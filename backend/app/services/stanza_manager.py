@@ -65,7 +65,7 @@ class StanzaManager:
 
             self.pipelines[lang_code] = stanza.Pipeline(
                 lang=lang_code, 
-                dir=resources_dir,
+                model_dir=resources_dir,
                 processors=processors_list,
                 download_method=stanza.DownloadMethod.REUSE_RESOURCES,
                 **kwargs
@@ -76,7 +76,7 @@ class StanzaManager:
             print(f"Downloading model for '{lang_code}'...")
             
             processors_list = self.LANGUAGE_PROCESSORS.get(lang_code, 'tokenize,mwt,pos,lemma,depparse')
-            stanza.download(lang_code, dir=resources_dir, processors=processors_list)
+            stanza.download(lang_code, model_dir=resources_dir, processors=processors_list)
             
             kwargs = {}
             if lang_code == 'tr':
@@ -84,7 +84,7 @@ class StanzaManager:
                 
             self.pipelines[lang_code] = stanza.Pipeline(
                 lang=lang_code, 
-                dir=resources_dir,
+                model_dir=resources_dir,
                 processors=processors_list,
                 download_method=stanza.DownloadMethod.REUSE_RESOURCES,
                 **kwargs

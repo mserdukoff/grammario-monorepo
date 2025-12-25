@@ -96,21 +96,28 @@ The project is structured as a monorepo:
 
 ## 🛠 Deployment
 
-### Backend (Render / Railway / Fly.io)
+### 🚄 Railway (Recommended)
 
-The backend includes a production-ready `Dockerfile` that pre-downloads necessary Stanza models during the build process to ensure fast startup times.
+Since this is a monorepo, you need to tell Railway where to find the services.
 
-1.  Push code to GitHub.
-2.  Connect your repository to your cloud provider.
-3.  Set the Root Directory to `backend`.
-4.  Add your `OPENROUTER_KEY` environment variable.
+1.  **Push your code** to GitHub.
+2.  **Create a New Project** on Railway -> Deploy from GitHub.
+3.  **Add Two Services** from the same repo:
+    *   **Service 1 (Backend)**:
+        *   Go to Settings -> **Root Directory**: Set to `/backend`
+        *   Add Variable: `OPENROUTER_KEY`
+    *   **Service 2 (Frontend)**:
+        *   Go to Settings -> **Root Directory**: Set to `/frontend`
+        *   Add Variable: `API_URL` -> `https://<your-backend-url>.up.railway.app` (You get this URL after the backend deploys)
 
-### Frontend (Vercel)
+### 🐳 Docker & Other Providers
 
-1.  Push code to GitHub.
-2.  Import the project into Vercel.
-3.  Set the Root Directory to `frontend`.
-4.  Add the `NEXT_PUBLIC_API_URL` environment variable pointing to your deployed backend URL.
+This project includes a `docker-compose.yml` for orchestration and optimized `Dockerfile`s for both services.
+
+*   **Backend**: Python 3.11 Slim image. Pre-downloads NLP models during build.
+*   **Frontend**: Next.js Standalone build (Alpine Linux). Extremely lightweight.
+
+You can deploy to any provider that supports Docker Compose or individual Dockerfiles (Render, Fly.io, DigitalOcean).
 
 ## 🤝 Contributing
 

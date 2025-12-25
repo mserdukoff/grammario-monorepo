@@ -20,7 +20,8 @@ def download_models():
     for lang in LANGUAGES:
         print(f"Downloading {lang}...")
         processors = LANGUAGE_PROCESSORS.get(lang)
-        stanza.download(lang, dir=resources_dir, processors=processors)
+        # Stanza > 1.4 uses 'model_dir' instead of 'dir'
+        stanza.download(lang, model_dir=resources_dir, processors=processors)
     
     print("All models downloaded successfully.")
 
