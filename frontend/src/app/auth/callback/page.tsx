@@ -4,118 +4,107 @@
  * OAuth Callback Handler (Client-Side)
  * 
  * Handles the OAuth callback from providers like Google.
- * Exchanges the code for a session using the browser client
- * so the session is stored in localStorage.
+ * For implicit flow (hash fragment), the Supabase client auto-processes it.
+ * For PKCE flow (code in query), we exchange the code for a session.
  */
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase/client"
+import { useAuth } from "@/lib/auth-context"
 
 export default function AuthCallback() {
   const router = useRouter()
+  const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<string>("Initializing...")
-  const hasRun = useRef(false)
+  const [status, setStatus] = useState<string>("Completing sign in...")
 
+  // Redirect once user is authenticated
   useEffect(() => {
-    // Prevent double-execution in React Strict Mode
-    if (hasRun.current) return
-    hasRun.current = true
+    if (!loading && user) {
+      console.log("[Auth Callback] User authenticated, redirecting to /app")
+      router.replace("/app")
+    }
+  }, [user, loading, router])
 
+  // Handle PKCE flow (code in query params) or check for errors
+  useEffect(() => {
     const handleCallback = async () => {
-      console.log("[Auth Callback] Starting callback handling...")
       console.log("[Auth Callback] URL:", window.location.href)
       
-      const supabase = getSupabaseClient()
-      if (!supabase) {
-        setError("Supabase client not available")
+      // Check for error in hash (OAuth error)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const hashError = hashParams.get("error")
+      const hashErrorDesc = hashParams.get("error_description")
+      
+      if (hashError) {
+        console.error("[Auth Callback] OAuth error:", hashError, hashErrorDesc)
+        setError(hashErrorDesc || hashError)
         return
       }
 
-      // Check for hash fragment (implicit flow) - Supabase client handles this automatically
-      // but we should wait for it
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get("access_token")
-      
-      if (accessToken) {
-        console.log("[Auth Callback] Found access_token in hash (implicit flow)")
-        setStatus("Processing session...")
-        // The Supabase client automatically handles the hash fragment
-        // Wait a moment for onAuthStateChange to fire
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Check if we have a session now
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          console.log("[Auth Callback] Session established from hash, redirecting...")
-          router.replace("/app")
-          return
-        }
+      // Check for access_token in hash (implicit flow)
+      // The AuthProvider's onAuthStateChange will handle this automatically
+      if (hashParams.get("access_token")) {
+        console.log("[Auth Callback] Implicit flow detected, waiting for AuthProvider...")
+        setStatus("Processing authentication...")
+        return // AuthProvider will handle it
       }
 
       // Check for code in query params (PKCE flow)
       const params = new URLSearchParams(window.location.search)
       const code = params.get("code")
-      const next = params.get("next") || "/app"
+      const errorParam = params.get("error")
+      const errorDesc = params.get("error_description")
+      
+      if (errorParam) {
+        console.error("[Auth Callback] OAuth error in query:", errorParam, errorDesc)
+        setError(errorDesc || errorParam)
+        return
+      }
       
       if (code) {
-        console.log("[Auth Callback] Found code in query params (PKCE flow)")
-        setStatus("Exchanging code for session...")
+        console.log("[Auth Callback] PKCE flow detected, exchanging code...")
+        setStatus("Exchanging authorization code...")
         
+        const supabase = getSupabaseClient()
+        if (!supabase) {
+          setError("Authentication service unavailable")
+          return
+        }
+
         try {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
           
           if (exchangeError) {
-            console.error("[Auth Callback] Exchange error:", exchangeError)
-            // Don't immediately show error - check if session exists anyway
-            // (sometimes the code is already used but session is valid)
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session) {
-              console.log("[Auth Callback] Session exists despite error, redirecting...")
-              router.replace(next)
-              return
-            }
+            console.error("[Auth Callback] Code exchange error:", exchangeError)
             setError(exchangeError.message)
             return
           }
-
-          if (data.session) {
-            console.log("[Auth Callback] Code exchange successful, redirecting to", next)
-            router.replace(next)
-            return
-          }
+          
+          console.log("[Auth Callback] Code exchange successful")
+          setStatus("Sign in successful!")
+          // The onAuthStateChange in AuthProvider will update user state
+          // and trigger the redirect via the first useEffect
         } catch (err) {
-          console.error("[Auth Callback] Exception during code exchange:", err)
-          // Check if session exists anyway
-          const { data: { session } } = await supabase.auth.getSession()
-          if (session) {
-            console.log("[Auth Callback] Session exists despite exception, redirecting...")
-            router.replace(next)
-            return
-          }
+          console.error("[Auth Callback] Exception:", err)
           setError("Authentication failed. Please try again.")
-          return
         }
-      }
-
-      // No code or token found - check if already authenticated
-      console.log("[Auth Callback] No code or token in URL, checking existing session...")
-      setStatus("Checking authentication status...")
-      
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        console.log("[Auth Callback] Already authenticated, redirecting...")
-        router.replace("/app")
         return
       }
 
-      // Nothing worked
-      console.log("[Auth Callback] No authentication method found")
-      setError("No authentication code found. Please try signing in again.")
+      // No auth data in URL - wait a moment to see if AuthProvider picks up existing session
+      console.log("[Auth Callback] No auth data in URL, checking session...")
+      setStatus("Checking authentication...")
+      
+      // Give AuthProvider time to check existing session
+      setTimeout(() => {
+        // If still no user after 3 seconds, show error
+        setError("No authentication data found. Please try signing in again.")
+      }, 3000)
     }
 
     handleCallback()
-  }, [router])
+  }, [])
 
   if (error) {
     return (
@@ -131,7 +120,10 @@ export default function AuthCallback() {
               Return Home
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                // Clear the error and try signing in fresh
+                window.location.href = "/"
+              }}
               className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500 transition"
             >
               Try Again

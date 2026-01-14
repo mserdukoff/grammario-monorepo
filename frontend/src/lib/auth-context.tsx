@@ -173,37 +173,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    console.log("[Auth] Supabase client exists, calling getSession...")
+    // Check if there's an auth hash in the URL (implicit flow)
+    // If so, let onAuthStateChange handle it - don't call getSession manually
+    const hasAuthHash = typeof window !== "undefined" && 
+      (window.location.hash.includes("access_token") || 
+       window.location.hash.includes("error"))
     
+    console.log("[Auth] Has auth hash:", hasAuthHash)
+
     // Safety timeout - never let loading hang forever
     const safetyTimeout = setTimeout(() => {
       console.warn("[Auth] Safety timeout reached - forcing loading to false")
       setLoading(false)
-    }, 5000)
-    
-    // Get initial session
-    supabase.auth.getSession()
-      .then(({ data }: { data: { session: Session | null } }) => {
-        clearTimeout(safetyTimeout)
-        console.log("[Auth] getSession returned:", !!data.session)
-        setSession(data.session)
-        setUser(data.session?.user ?? null)
-        if (data.session?.user) {
-          loadProfile(data.session.user)
-        }
-        setLoading(false)
-      })
-      .catch((error: Error) => {
-        clearTimeout(safetyTimeout)
-        console.error("[Auth] getSession error:", error)
-        setLoading(false)
-      })
+    }, 8000)
 
-    // Listen for auth changes
+    // Listen for auth changes FIRST - this handles both:
+    // 1. Hash fragment processing (implicit flow)
+    // 2. Session changes during app usage
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
-      console.log("[Auth] onAuthStateChange event, session:", !!session)
+    } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
+      console.log("[Auth] onAuthStateChange event:", event, "session:", !!session)
+      clearTimeout(safetyTimeout)
+      
       setSession(session)
       setUser(session?.user ?? null)
 
@@ -215,6 +207,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setLoading(false)
     })
+
+    // Only call getSession if there's no auth hash
+    // (hash is handled automatically by onAuthStateChange)
+    if (!hasAuthHash) {
+      console.log("[Auth] No auth hash, calling getSession...")
+      supabase.auth.getSession()
+        .then(({ data }: { data: { session: Session | null } }) => {
+          clearTimeout(safetyTimeout)
+          console.log("[Auth] getSession returned:", !!data.session)
+          // Only set if onAuthStateChange hasn't already set it
+          setSession((current) => current ?? data.session)
+          setUser((current) => current ?? data.session?.user ?? null)
+          if (data.session?.user) {
+            loadProfile(data.session.user)
+          }
+          setLoading(false)
+        })
+        .catch((error: Error) => {
+          clearTimeout(safetyTimeout)
+          console.error("[Auth] getSession error:", error)
+          setLoading(false)
+        })
+    } else {
+      console.log("[Auth] Auth hash detected, waiting for onAuthStateChange...")
+    }
 
     return () => {
       clearTimeout(safetyTimeout)
