@@ -60,7 +60,7 @@ import {
   getDailyGoal,
   setDailyGoal,
   XP_REWARDS,
-} from "@/lib/firestore"
+} from "@/lib/db"
 import type { Analysis, DailyGoal } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
 
@@ -148,28 +148,23 @@ export default function Dashboard() {
 
   const loadUserData = async () => {
     if (!user) return
-    console.log("[Grammario] Loading user data for:", user.id)
     setHistoryLoading(true)
     try {
-      console.log("[Grammario] Fetching analyses and daily goal...")
       const [analyses, goal] = await Promise.all([
         getRecentAnalyses(user.id, 20),
         getDailyGoal(user.id),
       ])
-      console.log("[Grammario] Loaded analyses:", analyses.length, "goal:", goal)
       setHistory(analyses)
       if (goal) {
         setDailyGoalState(goal)
       } else {
         // Create default daily goal
-        console.log("[Grammario] Creating default daily goal...")
         const newGoal = await setDailyGoal(user.id, preferences.dailyGoalTarget)
         setDailyGoalState(newGoal)
       }
     } catch (error) {
-      console.error("[Grammario] Failed to load user data:", error)
+      console.error("Failed to load user data:", error)
     } finally {
-      console.log("[Grammario] User data load complete")
       setHistoryLoading(false)
     }
   }
