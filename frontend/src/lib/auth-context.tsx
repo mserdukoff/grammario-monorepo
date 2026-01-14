@@ -163,16 +163,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen to auth state changes - only runs in browser
   useEffect(() => {
+    console.log("[Auth] useEffect running...")
     const supabase = getSupabaseClient()
     
     // During SSR or if client not available, just set loading to false
     if (!supabase) {
+      console.log("[Auth] No supabase client, setting loading false")
       setLoading(false)
       return
     }
 
+    console.log("[Auth] Supabase client exists, calling getSession...")
     // Get initial session
     supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+      console.log("[Auth] getSession returned:", !!data.session)
       setSession(data.session)
       setUser(data.session?.user ?? null)
       if (data.session?.user) {
