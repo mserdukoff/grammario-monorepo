@@ -53,17 +53,21 @@ async function createOrUpdateUserProfile(
   displayName?: string | null,
   avatarUrl?: string | null
 ): Promise<User | null> {
+  console.log("[Auth] createOrUpdateUserProfile called for:", userId)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = getSupabaseClient() as any
   const today = new Date().toISOString().split("T")[0]
   
   // Check if user exists
+  console.log("[Auth] Checking if user exists...")
   const { data: existing, error: fetchError } = await supabase
     .from("users")
     .select("*")
     .eq("id", userId)
     .single()
 
+  console.log("[Auth] User lookup result:", { existing: !!existing, error: fetchError?.code })
+  
   // Log for debugging - can be removed later
   if (fetchError && fetchError.code !== "PGRST116") {
     console.error("Error fetching user profile:", fetchError)
@@ -147,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = getSupabaseClient()
 
   const loadProfile = useCallback(async (authUser: SupabaseUser) => {
+    console.log("[Auth] Loading profile for:", authUser.id)
     setProfileLoading(true)
     try {
       const userProfile = await createOrUpdateUserProfile(
@@ -155,9 +160,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authUser.user_metadata?.full_name || authUser.user_metadata?.name,
         authUser.user_metadata?.avatar_url
       )
+      console.log("[Auth] Profile loaded:", userProfile)
       setProfile(userProfile)
     } catch (error) {
-      console.error("Failed to load profile:", error)
+      console.error("[Auth] Failed to load profile:", error)
     } finally {
       setProfileLoading(false)
     }
