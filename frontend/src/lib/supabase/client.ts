@@ -22,11 +22,15 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
+  // Debug: show env var status (remove after debugging)
+  console.log("[Supabase] URL exists:", !!supabaseUrl, "Key exists:", !!supabaseKey)
+  
   if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing Supabase environment variables")
+    console.error("[Supabase] MISSING ENV VARS - URL:", supabaseUrl, "Key:", supabaseKey?.slice(0, 10) + "...")
     return null
   }
   
+  console.log("[Supabase] Creating client for:", supabaseUrl)
   return createBrowserClient<Database>(supabaseUrl, supabaseKey)
 }
 
