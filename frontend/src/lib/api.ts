@@ -1,11 +1,10 @@
 /**
  * API Client
  * 
- * Centralized API client with authentication support.
- * Uses Supabase session for auth headers.
+ * Centralized API client for Grammario.
+ * All API routes are now handled by Next.js API routes.
  */
 import axios, { AxiosError } from "axios"
-import { getSupabaseClient } from "./supabase/client"
 
 // Types for API responses
 export interface AnalysisResponse {
@@ -79,24 +78,14 @@ export class ApiError extends Error {
   }
 }
 
-// Create axios instance
+// Create axios instance - no auth interceptor needed since
+// Next.js API routes handle auth via cookies
 const api = axios.create({
   baseURL: "/api/v1",
   timeout: 60000, // 60 seconds for most requests
   headers: {
     "Content-Type": "application/json",
   },
-})
-
-// Add auth interceptor
-api.interceptors.request.use(async (config) => {
-  const supabase = getSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`
-  }
-  return config
 })
 
 // Add response interceptor for error handling
@@ -110,6 +99,12 @@ api.interceptors.response.use(
         message = error.response.data.detail
       } else if (error.response.data.detail.message) {
         message = error.response.data.detail.message
+      }
+    } else if (error.response?.data && typeof error.response.data === "object") {
+      // Handle Next.js API route error format
+      const data = error.response.data as Record<string, unknown>
+      if (data.message && typeof data.message === "string") {
+        message = data.message
       }
     } else if (error.message) {
       message = error.message
@@ -151,9 +146,8 @@ export async function createCheckoutSession(successUrl: string, cancelUrl: strin
   return response.data
 }
 
-export async function createPortalSession(customerId: string, returnUrl: string) {
+export async function createPortalSession(returnUrl: string) {
   const response = await api.post<{ portal_url: string }>("/billing/create-portal-session", {
-    customer_id: customerId,
     return_url: returnUrl,
   })
   return response.data

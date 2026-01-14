@@ -1,0 +1,69 @@
+/**
+ * Usage API Route
+ * 
+ * Returns usage statistics for the current user.
+ * Uses Supabase to track daily analyses count.
+ */
+import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+
+// Rate limits
+const FREE_LIMIT = 100  // Generous for beta
+const PRO_LIMIT = 1000
+const WINDOW_SECONDS = 86400  // 24 hours
+
+export async function GET() {
+  const supabase = await createClient()
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    // Anonymous user
+    const now = Math.floor(Date.now() / 1000)
+    return NextResponse.json({
+      used_today: 0,
+      limit: FREE_LIMIT,
+      remaining: FREE_LIMIT,
+      reset_at: now + WINDOW_SECONDS,
+      is_pro: false,
+    })
+  }
+  
+  // Get user profile for pro status
+  const { data: profile } = await supabase
+    .from("users")
+    .select("is_pro")
+    .eq("id", user.id)
+    .single()
+  
+  const isPro = profile?.is_pro ?? false
+  const limit = isPro ? PRO_LIMIT : FREE_LIMIT
+  
+  // Count analyses from today
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayIso = today.toISOString()
+  
+  const { count } = await supabase
+    .from("analyses")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", todayIso)
+  
+  const usedToday = count ?? 0
+  const remaining = Math.max(0, limit - usedToday)
+  
+  // Calculate reset time (midnight UTC)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const resetAt = Math.floor(tomorrow.getTime() / 1000)
+  
+  return NextResponse.json({
+    used_today: usedToday,
+    limit,
+    remaining,
+    reset_at: resetAt,
+    is_pro: isPro,
+  })
+}

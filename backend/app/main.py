@@ -6,16 +6,9 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from app.api.routes import router as api_router
-from app.api.billing import router as billing_router
 from app.core.config import settings
-from app.core.security import (
-    SecurityHeadersMiddleware,
-    RequestLoggingMiddleware,
-    RateLimitMiddleware,
-)
 
 # Configure logging
 logging.basicConfig(
@@ -54,10 +47,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="A deep-dive linguistic deconstruction tool for language learners.",
+    description="A deep-dive linguistic analysis engine for language learners.",
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    docs_url="/docs" if settings.DEBUG else None,  # Disable docs in production
+    docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
 )
 
@@ -76,39 +69,18 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Security middlewares (order matters - first added = last executed)
-
-# 1. CORS - must be first (last to execute on response)
+# CORS middleware - allow requests from Next.js frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],  # Restricted methods
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "X-Request-ID"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
-# 2. Trusted host validation (prevent host header attacks) - only in production
-if not settings.DEBUG:
-    allowed_hosts = ["localhost", "127.0.0.1", "*"]  # Allow all hosts since nginx handles this
-    # Note: We allow "*" because nginx is the public-facing proxy and handles host validation
-    # The backend only receives requests from nginx within the Docker network
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
-# 3. Security headers
-app.add_middleware(SecurityHeadersMiddleware)
-
-# 4. Request logging with unique IDs
-app.add_middleware(RequestLoggingMiddleware)
-
-# 5. Global rate limiting (60 requests/minute per IP)
-if not settings.DEBUG:
-    app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
-
-
-# Include routers
+# Include API router
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(billing_router, prefix="/api/v1/billing")
 
 
 @app.get("/")
@@ -130,7 +102,6 @@ async def health_check():
         "version": settings.APP_VERSION,
         "services": {
             "llm": bool(settings.OPENROUTER_KEY or settings.OPENAI_API_KEY),
-            "stripe": bool(settings.STRIPE_SECRET_KEY),
         },
         "models": {
             "loaded": stanza_manager.get_loaded_models(),

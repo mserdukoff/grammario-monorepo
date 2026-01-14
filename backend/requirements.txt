@@ -4,19 +4,12 @@ uvicorn[standard]>=0.27.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 
-# NLP
+# NLP - Stanza for linguistic analysis
 stanza>=1.7.0
 
-# LLM Integration
+# LLM Integration - for pedagogical data generation
 openai>=1.10.0
 httpx>=0.26.0
 
 # Environment
 python-dotenv>=1.0.0
-
-# JWT Authentication
-PyJWT>=2.8.0
-
-# === Coming Soon ===
-# stripe>=7.0.0  # For payments
-# supabase>=2.0.0  # For direct database access

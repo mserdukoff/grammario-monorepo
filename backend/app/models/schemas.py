@@ -1,7 +1,13 @@
-from typing import List, Optional, Any
+"""
+Pydantic schemas for the NLP API.
+These define the request/response models for linguistic analysis.
+"""
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
+
 class TokenNode(BaseModel):
+    """A single token in the analyzed sentence."""
     id: int = Field(..., description="The 1-based index of the token in the sentence.")
     text: str = Field(..., description="The original word form.")
     lemma: Optional[str] = Field(None, description="The base form of the word.")
@@ -11,11 +17,11 @@ class TokenNode(BaseModel):
     head_id: Optional[int] = Field(None, description="ID of the syntactic head.")
     deprel: Optional[str] = Field(None, description="Dependency relation to the head.")
     misc: Optional[str] = Field(None, description="Miscellaneous annotations.")
-    
-    # Placeholder for Turkish segments later
     segments: Optional[List[str]] = Field(None, description="Morphological segments (e.g., for Turkish).")
 
+
 class GrammarConcept(BaseModel):
+    """A grammar concept identified in the sentence."""
     name: str = Field(..., description="Name of the grammar concept (e.g., 'Dative Case', 'Clitic Pronoun').")
     description: str = Field(..., description="Short explanation of the concept in the context of this sentence.")
     related_words: List[str] = Field(..., description="List of words from the sentence that exemplify this concept.")
@@ -31,29 +37,27 @@ class GrammarTip(BaseModel):
 
 
 class PedagogicalData(BaseModel):
+    """LLM-generated pedagogical insights for the sentence."""
     translation: str = Field(..., description="Natural sounding English translation.")
     nuance: Optional[str] = Field(None, description="Cultural or subtle linguistic nuance notes.")
     concepts: List[GrammarConcept] = Field(..., description="Key grammar concepts identified in the sentence.")
     tips: Optional[List[GrammarTip]] = Field(None, description="Specific grammar tips explaining why certain forms are used.")
 
+
 class SentenceMetadata(BaseModel):
+    """Metadata about the analyzed sentence."""
     text: str = Field(..., description="Original sentence text.")
     language: str = Field(..., description="Language code (e.g., 'it', 'es', 'de', 'ru', 'tr').")
 
+
 class SentenceAnalysis(BaseModel):
+    """Complete analysis result for a sentence."""
     metadata: SentenceMetadata
     nodes: List[TokenNode]
     pedagogical_data: Optional[PedagogicalData] = Field(None, description="LLM-generated pedagogical insights.")
 
+
 class AnalysisRequest(BaseModel):
+    """Request body for sentence analysis."""
     text: str
     language: str = Field(..., pattern="^(it|es|de|ru|tr)$")
-
-
-class UsageStats(BaseModel):
-    """User usage statistics."""
-    used_today: int = Field(..., description="Number of analyses used today")
-    limit: int = Field(..., description="Daily limit based on subscription tier")
-    remaining: int = Field(..., description="Remaining analyses for today")
-    reset_at: int = Field(..., description="Unix timestamp when limit resets")
-    is_pro: bool = Field(False, description="Whether user has Pro subscription")

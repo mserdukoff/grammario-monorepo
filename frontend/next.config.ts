@@ -2,16 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: process.env.API_URL 
-          ? `${process.env.API_URL}/api/v1/:path*` 
-          : "http://127.0.0.1:8000/api/v1/:path*",
-      },
-    ];
-  },
+  // API routes are now handled by Next.js
+  // The /api/v1/analyze route proxies to the NLP backend internally
 };
 
 export default nextConfig;
