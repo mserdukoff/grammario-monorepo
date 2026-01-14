@@ -75,13 +75,9 @@ app.add_middleware(
 
 # 2. Trusted host validation (prevent host header attacks) - only in production
 if not settings.DEBUG:
-    allowed_hosts = ["localhost", "127.0.0.1"]
-    # Add your production domain
-    if settings.CORS_ORIGINS:
-        for origin in settings.cors_origins_list:
-            host = origin.replace("https://", "").replace("http://", "").split(":")[0]
-            if host not in allowed_hosts:
-                allowed_hosts.append(host)
+    allowed_hosts = ["localhost", "127.0.0.1", "*"]  # Allow all hosts since nginx handles this
+    # Note: We allow "*" because nginx is the public-facing proxy and handles host validation
+    # The backend only receives requests from nginx within the Docker network
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
 # 3. Security headers
