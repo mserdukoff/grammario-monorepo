@@ -28,10 +28,25 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler for startup/shutdown events."""
+    import os
+    
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
+    
+    # Pre-load Stanza models if PRELOAD_MODELS is set
+    if os.environ.get("PRELOAD_MODELS", "false").lower() == "true":
+        logger.info("Pre-loading Stanza models at startup...")
+        from app.services.stanza_manager import stanza_manager
+        for lang in stanza_manager.SUPPORTED_LANGUAGES:
+            try:
+                logger.info(f"Loading model: {lang}")
+                stanza_manager.get_pipeline(lang)
+            except Exception as e:
+                logger.error(f"Failed to pre-load {lang}: {e}")
+        logger.info(f"Models loaded: {stanza_manager.get_loaded_models()}")
+    
     yield
     # Shutdown
     logger.info("Shutting down...")
@@ -109,14 +124,44 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Detailed health check endpoint."""
+    from app.services.stanza_manager import stanza_manager
     return {
         "status": "healthy",
         "version": settings.APP_VERSION,
         "services": {
             "llm": bool(settings.OPENROUTER_KEY or settings.OPENAI_API_KEY),
             "stripe": bool(settings.STRIPE_SECRET_KEY),
+        },
+        "models": {
+            "loaded": stanza_manager.get_loaded_models(),
+            "max_loaded": stanza_manager.MAX_LOADED_MODELS,
+            "supported": stanza_manager.SUPPORTED_LANGUAGES,
         }
     }
+
+
+@app.post("/warmup/{language}")
+async def warmup_model(language: str):
+    """
+    Pre-load a Stanza model for a specific language.
+    This can take 1-3 minutes if the model needs to download.
+    """
+    from app.services.stanza_manager import stanza_manager
+    
+    if language not in stanza_manager.SUPPORTED_LANGUAGES:
+        return {"error": f"Unsupported language: {language}"}
+    
+    try:
+        # This will download and load the model if not already loaded
+        stanza_manager.get_pipeline(language)
+        return {
+            "status": "success",
+            "language": language,
+            "loaded_models": stanza_manager.get_loaded_models()
+        }
+    except Exception as e:
+        logger.error(f"Failed to warm up model {language}: {e}")
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":

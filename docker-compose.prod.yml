@@ -24,23 +24,25 @@ services:
       # CORS - Your Vercel frontend domain
       - CORS_ORIGINS=${CORS_ORIGINS:-https://grammario.ai,https://www.grammario.ai}
       
-      # Memory optimization - keep max 2 models loaded on 2GB RAM
-      - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-2}
+      # Stanza model configuration
+      # With 4GB swap on 2GB RAM, can keep all 5 models loaded
+      - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-5}
+      - PRELOAD_MODELS=${PRELOAD_MODELS:-true}
       
       # Production mode
       - DEBUG=false
     deploy:
       resources:
         limits:
-          memory: 1800M
+          memory: 3500M  # Allow more with swap
         reservations:
           memory: 1024M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
-      start_period: 60s
-      retries: 3
+      start_period: 300s  # 5 minutes - models take time to load
+      retries: 5
     logging:
       driver: "json-file"
       options:

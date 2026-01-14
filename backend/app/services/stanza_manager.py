@@ -23,8 +23,9 @@ class StanzaManager:
     }
     
     # Memory management: max models to keep loaded at once
-    # On 2GB RAM, keep max 2 models; on 4GB, can keep 3-4
-    MAX_LOADED_MODELS = int(os.environ.get("MAX_LOADED_MODELS", "2"))
+    # On 2GB RAM with 4GB swap, can keep all 5 models (with some swapping)
+    # On 4GB+ RAM, can comfortably keep all 5 models
+    MAX_LOADED_MODELS = int(os.environ.get("MAX_LOADED_MODELS", "5"))
 
     def __new__(cls):
         if cls._instance is None:

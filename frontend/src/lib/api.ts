@@ -82,7 +82,7 @@ export class ApiError extends Error {
 // Create axios instance
 const api = axios.create({
   baseURL: "/api/v1",
-  timeout: 30000,
+  timeout: 60000, // 60 seconds for most requests
   headers: {
     "Content-Type": "application/json",
   },
@@ -125,7 +125,10 @@ api.interceptors.response.use(
 
 // API functions
 export async function analyzeText(text: string, language: string): Promise<AnalysisResponse> {
-  const response = await api.post<AnalysisResponse>("/analyze", { text, language })
+  // Longer timeout for analyze - model loading can take time on first request per language
+  const response = await api.post<AnalysisResponse>("/analyze", { text, language }, {
+    timeout: 180000, // 3 minutes - model download + load can take a while
+  })
   return response.data
 }
 
