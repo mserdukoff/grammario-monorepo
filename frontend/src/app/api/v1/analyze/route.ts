@@ -58,9 +58,12 @@ export async function POST(request: NextRequest) {
   // Get current user (optional - allows anonymous usage)
   const { data: { user } } = await supabase.auth.getUser()
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  
   // Check rate limit for authenticated users
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile } = await db
       .from("users")
       .select("is_pro")
       .eq("id", user.id)
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
     today.setHours(0, 0, 0, 0)
     const todayIso = today.toISOString()
     
-    const { count } = await supabase
+    const { count } = await db
       .from("analyses")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
@@ -130,22 +133,13 @@ export async function POST(request: NextRequest) {
     
     // Save analysis to Supabase for authenticated users
     if (user) {
-      await supabase.from("analyses").insert({
+      await db.from("analyses").insert({
         user_id: user.id,
         text: cleanText,
         language,
         translation: analysisResult.pedagogical_data?.translation || null,
         nodes: analysisResult.nodes,
         pedagogical_data: analysisResult.pedagogical_data || null,
-      })
-      
-      // Update user's total analyses count
-      await supabase.rpc("increment_total_analyses", { user_id: user.id }).catch(() => {
-        // Fallback: direct update if RPC doesn't exist
-        supabase
-          .from("users")
-          .update({ total_analyses: supabase.rpc("increment", { x: 1 }) })
-          .eq("id", user.id)
       })
     }
     

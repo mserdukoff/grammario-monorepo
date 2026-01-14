@@ -137,20 +137,4 @@ export async function getLanguages(): Promise<{ languages: Language[] }> {
   return response.data
 }
 
-// Billing
-export async function createCheckoutSession(successUrl: string, cancelUrl: string) {
-  const response = await api.post<{ session_id: string; checkout_url: string }>(
-    "/billing/create-checkout-session",
-    { success_url: successUrl, cancel_url: cancelUrl }
-  )
-  return response.data
-}
-
-export async function createPortalSession(returnUrl: string) {
-  const response = await api.post<{ portal_url: string }>("/billing/create-portal-session", {
-    return_url: returnUrl,
-  })
-  return response.data
-}
-
 export default api

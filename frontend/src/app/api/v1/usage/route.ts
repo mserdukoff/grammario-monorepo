@@ -30,8 +30,11 @@ export async function GET() {
     })
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  
   // Get user profile for pro status
-  const { data: profile } = await supabase
+  const { data: profile } = await db
     .from("users")
     .select("is_pro")
     .eq("id", user.id)
@@ -45,7 +48,7 @@ export async function GET() {
   today.setHours(0, 0, 0, 0)
   const todayIso = today.toISOString()
   
-  const { count } = await supabase
+  const { count } = await db
     .from("analyses")
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
