@@ -2,11 +2,10 @@
  * Supabase Browser Client
  * 
  * Creates a Supabase client for use in Client Components.
- * This client handles auth state automatically via cookies.
  * 
  * IMPORTANT: Only use in browser environment (client components with useEffect)
  */
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
 // Singleton for client-side usage
@@ -14,7 +13,7 @@ import type { Database } from "./database.types"
 let client: any = null
 
 export function createClient() {
-  // Never create during SSR - createBrowserClient accesses `location`
+  // Never create during SSR
   if (typeof window === "undefined") {
     return null
   }
@@ -26,12 +25,12 @@ export function createClient() {
   console.log("[Supabase] URL exists:", !!supabaseUrl, "Key exists:", !!supabaseKey)
   
   if (!supabaseUrl || !supabaseKey) {
-    console.error("[Supabase] MISSING ENV VARS - URL:", supabaseUrl, "Key:", supabaseKey?.slice(0, 10) + "...")
+    console.error("[Supabase] MISSING ENV VARS")
     return null
   }
   
   console.log("[Supabase] Creating client for:", supabaseUrl)
-  return createBrowserClient<Database>(supabaseUrl, supabaseKey)
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
 }
 
 export function getSupabaseClient() {
