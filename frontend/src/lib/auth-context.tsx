@@ -144,8 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
 
-  const supabase = getSupabaseClient()
-
   const loadProfile = useCallback(async (authUser: SupabaseUser) => {
     setProfileLoading(true)
     try {
@@ -163,8 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Listen to auth state changes
+  // Listen to auth state changes - only runs in browser
   useEffect(() => {
+    const supabase = getSupabaseClient()
+    
+    // During SSR or if client not available, just set loading to false
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       setSession(data.session)
@@ -192,9 +198,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, loadProfile])
+  }, [loadProfile])
 
   const signIn = async (email: string, password: string) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) throw new Error("Supabase client not available")
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -203,6 +211,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, displayName: string) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) throw new Error("Supabase client not available")
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -216,6 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
+    const supabase = getSupabaseClient()
+    if (!supabase) throw new Error("Supabase client not available")
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -226,11 +238,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    const supabase = getSupabaseClient()
+    if (!supabase) throw new Error("Supabase client not available")
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }
 
   const resetPassword = async (email: string) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) throw new Error("Supabase client not available")
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })

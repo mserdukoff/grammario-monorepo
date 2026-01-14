@@ -3,37 +3,37 @@
  * 
  * Creates a Supabase client for use in Client Components.
  * This client handles auth state automatically via cookies.
+ * 
+ * IMPORTANT: Only use in browser environment (client components with useEffect)
  */
 import { createBrowserClient } from "@supabase/ssr"
-import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
 // Singleton for client-side usage
-let client: SupabaseClient<Database> | null = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let client: any = null
 
-export function createClient(): SupabaseClient<Database> {
+export function createClient() {
+  // Never create during SSR - createBrowserClient accesses `location`
+  if (typeof window === "undefined") {
+    return null
+  }
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Missing Supabase configuration")
+    console.error("Missing Supabase environment variables")
+    return null
   }
   
   return createBrowserClient<Database>(supabaseUrl, supabaseKey)
 }
 
-export function getSupabaseClient(): SupabaseClient<Database> {
-  // During SSR, return a dummy that will be replaced on client
+export function getSupabaseClient() {
+  // Never create during SSR
   if (typeof window === "undefined") {
-    // Return existing client or create one that will work during hydration
-    if (!client) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      if (supabaseUrl && supabaseKey) {
-        client = createBrowserClient<Database>(supabaseUrl, supabaseKey)
-      }
-    }
-    return client as SupabaseClient<Database>
+    return null
   }
   
   if (!client) {
