@@ -2,8 +2,11 @@
  * Supabase Middleware Client
  * 
  * Handles auth session refresh in Next.js middleware.
+ * 
+ * NOTE: Since we use localStorage-based auth (standard @supabase/supabase-js),
+ * this middleware only handles OAuth code redirects. Session refresh is 
+ * handled client-side.
  */
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
@@ -18,60 +21,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  let response = NextResponse.next({
+  // Also handle code on other pages (just in case)
+  if (searchParams.has("code") && !pathname.startsWith("/auth/callback")) {
+    const code = searchParams.get("code")
+    const redirectUrl = new URL("/auth/callback", request.url)
+    redirectUrl.searchParams.set("code", code!)
+    // Preserve the intended destination
+    redirectUrl.searchParams.set("next", pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Simply pass through - auth is handled client-side via localStorage
+  return NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
-  // Refresh session if expired
-  await supabase.auth.getUser()
-
-  return response
 }

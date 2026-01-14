@@ -168,16 +168,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // During SSR or if client not available, just set loading to false
     if (!supabase) {
-      console.log("[Auth] No supabase client, setting loading false")
+      console.log("[Auth] No supabase client (SSR), setting loading false")
       setLoading(false)
       return
     }
 
     console.log("[Auth] Supabase client exists, calling getSession...")
     
+    // Safety timeout - never let loading hang forever
+    const safetyTimeout = setTimeout(() => {
+      console.warn("[Auth] Safety timeout reached - forcing loading to false")
+      setLoading(false)
+    }, 5000)
+    
     // Get initial session
     supabase.auth.getSession()
       .then(({ data }: { data: { session: Session | null } }) => {
+        clearTimeout(safetyTimeout)
         console.log("[Auth] getSession returned:", !!data.session)
         setSession(data.session)
         setUser(data.session?.user ?? null)
@@ -187,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       })
       .catch((error: Error) => {
+        clearTimeout(safetyTimeout)
         console.error("[Auth] getSession error:", error)
         setLoading(false)
       })
@@ -195,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
+      console.log("[Auth] onAuthStateChange event, session:", !!session)
       setSession(session)
       setUser(session?.user ?? null)
 
@@ -207,7 +216,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(safetyTimeout)
+      subscription.unsubscribe()
+    }
   }, [loadProfile])
 
   const signIn = async (email: string, password: string) => {
