@@ -21,8 +21,8 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
       
-      # CORS - Update with your domain
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://grammario.app,https://www.grammario.app}
+      # CORS - Your Vercel frontend domain
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://grammario.ai,https://www.grammario.ai}
       
       # Memory optimization - keep max 2 models loaded on 2GB RAM
       - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-2}
