@@ -31,6 +31,11 @@ export const metadata: Metadata = {
     "Turkish",
   ],
   authors: [{ name: "Grammario" }],
+  icons: {
+    icon: "/G Logo Max.png",
+    shortcut: "/G Logo Max.png",
+    apple: "/G Logo Max.png",
+  },
   openGraph: {
     title: "Grammario - Visual Grammar for Deep Learners",
     description: "Deconstruct sentences with AI-powered linguistic analysis.",
