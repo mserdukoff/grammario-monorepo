@@ -12,10 +12,6 @@ export function createClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing Supabase environment variables:", {
-      url: !!supabaseUrl,
-      key: !!supabaseKey
-    })
     throw new Error("Missing Supabase configuration")
   }
   
@@ -26,6 +22,11 @@ export function createClient() {
 let client: ReturnType<typeof createClient> | null = null
 
 export function getSupabaseClient() {
+  // Only create client in browser environment
+  if (typeof window === "undefined") {
+    throw new Error("getSupabaseClient can only be used in browser")
+  }
+  
   if (!client) {
     client = createClient()
   }
