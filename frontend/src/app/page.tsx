@@ -1,6 +1,7 @@
 "use client"
 
 import { Navbar } from "@/components/ui/navbar"
+import { Footer } from "@/components/ui/footer"
 import { HeroSection } from "@/components/landing/HeroSection"
 import { FeaturesSection } from "@/components/landing/FeaturesSection"
 import { WhyChooseUsSection } from "@/components/landing/WhyChooseUsSection"
@@ -23,6 +24,8 @@ export default function Home() {
         <PricingSection />
         <FaqSection />
       </main>
+
+      <Footer />
     </div>
   )
 }

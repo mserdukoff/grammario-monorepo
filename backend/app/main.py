@@ -1,37 +1,133 @@
-# Load environment variables
-# We need to load them BEFORE importing other modules that might rely on them at the module level
+# Load environment variables BEFORE importing other modules
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
 from app.api.routes import router as api_router
-import os
+from app.api.billing import router as billing_router
+from app.core.config import settings
+from app.core.security import (
+    SecurityHeadersMiddleware,
+    RequestLoggingMiddleware,
+    RateLimitMiddleware,
+)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup/shutdown events."""
+    # Startup
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"Debug mode: {settings.DEBUG}")
+    logger.info(f"CORS origins: {settings.cors_origins_list}")
+    yield
+    # Shutdown
+    logger.info("Shutting down...")
+
 
 app = FastAPI(
-    title="Grammario API",
-    description="A deep-dive linguistic deconstruction tool.",
-    version="1.0.0"
+    title=settings.APP_NAME,
+    description="A deep-dive linguistic deconstruction tool for language learners.",
+    version=settings.APP_VERSION,
+    lifespan=lifespan,
+    docs_url="/docs" if settings.DEBUG else None,  # Disable docs in production
+    redoc_url="/redoc" if settings.DEBUG else None,
 )
 
-# Add CORS middleware
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Handle uncaught exceptions gracefully."""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "internal_server_error",
+            "message": "An unexpected error occurred. Please try again later.",
+        }
+    )
+
+
+# Security middlewares (order matters - first added = last executed)
+
+# 1. CORS - must be first (last to execute on response)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, replace with specific origins
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],  # Restricted methods
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "X-Request-ID"],
 )
 
+# 2. Trusted host validation (prevent host header attacks) - only in production
+if not settings.DEBUG:
+    allowed_hosts = ["localhost", "127.0.0.1"]
+    # Add your production domain
+    if settings.CORS_ORIGINS:
+        for origin in settings.cors_origins_list:
+            host = origin.replace("https://", "").replace("http://", "").split(":")[0]
+            if host not in allowed_hosts:
+                allowed_hosts.append(host)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+
+# 3. Security headers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 4. Request logging with unique IDs
+app.add_middleware(RequestLoggingMiddleware)
+
+# 5. Global rate limiting (60 requests/minute per IP)
+if not settings.DEBUG:
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
+
+
+# Include routers
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(billing_router, prefix="/api/v1/billing")
+
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Grammario API"}
+    """Root endpoint - health check."""
+    return {
+        "status": "healthy",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+    }
+
+
+@app.get("/health")
+async def health_check():
+    """Detailed health check endpoint."""
+    return {
+        "status": "healthy",
+        "version": settings.APP_VERSION,
+        "services": {
+            "llm": bool(settings.OPENROUTER_KEY or settings.OPENAI_API_KEY),
+            "stripe": bool(settings.STRIPE_SECRET_KEY),
+        }
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG
+    )

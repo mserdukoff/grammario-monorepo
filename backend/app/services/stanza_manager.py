@@ -1,16 +1,19 @@
 import stanza
 import os
+import time
+import logging
 from typing import Dict, Optional
+from collections import OrderedDict
+
+logger = logging.getLogger(__name__)
 
 class StanzaManager:
     _instance = None
-    _pipelines: Dict[str, stanza.Pipeline] = {}
     
     # Supported languages configuration
     SUPPORTED_LANGUAGES = ['it', 'es', 'de', 'ru', 'tr']
 
     # Processors per language
-    # Note: 'ru' does not use MWT in standard models usually.
     LANGUAGE_PROCESSORS = {
         'it': 'tokenize,mwt,pos,lemma,depparse',
         'es': 'tokenize,mwt,pos,lemma,depparse',
@@ -18,45 +21,73 @@ class StanzaManager:
         'ru': 'tokenize,pos,lemma,depparse',
         'tr': 'tokenize,mwt,pos,lemma,depparse'
     }
+    
+    # Memory management: max models to keep loaded at once
+    # On 2GB RAM, keep max 2 models; on 4GB, can keep 3-4
+    MAX_LOADED_MODELS = int(os.environ.get("MAX_LOADED_MODELS", "2"))
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(StanzaManager, cls).__new__(cls)
-            # Initialize any shared resources here if needed
-            # For now, we just rely on the class-level _pipelines dict
-            # or we could make it an instance attribute if we wanted per-instance state
-            # but Singleton usually implies shared state.
-            # Let's make _pipelines an instance attribute to be cleaner with Singleton pattern
             if not hasattr(cls._instance, 'pipelines'):
-                cls._instance.pipelines = {}
+                # Use OrderedDict to track LRU order
+                cls._instance.pipelines: OrderedDict[str, stanza.Pipeline] = OrderedDict()
+                cls._instance.last_used: Dict[str, float] = {}
         return cls._instance
 
     def get_pipeline(self, lang_code: str) -> stanza.Pipeline:
         """
         Returns a Stanza pipeline for the specified language.
-        Loads it lazily if it hasn't been loaded yet.
+        Loads lazily and uses LRU eviction to manage memory.
         """
         if lang_code not in self.SUPPORTED_LANGUAGES:
             raise ValueError(f"Language '{lang_code}' is not supported. Supported: {self.SUPPORTED_LANGUAGES}")
 
-        if lang_code not in self.pipelines:
-            self._load_model(lang_code)
+        # If already loaded, move to end (most recently used)
+        if lang_code in self.pipelines:
+            self.pipelines.move_to_end(lang_code)
+            self.last_used[lang_code] = time.time()
+            return self.pipelines[lang_code]
+        
+        # Need to load - check if we should evict first
+        self._maybe_evict_models()
+        
+        # Load the model
+        self._load_model(lang_code)
+        self.last_used[lang_code] = time.time()
         
         return self.pipelines[lang_code]
+    
+    def _maybe_evict_models(self):
+        """Evict least recently used models if at capacity."""
+        while len(self.pipelines) >= self.MAX_LOADED_MODELS:
+            # Get oldest (first item in OrderedDict)
+            oldest_lang = next(iter(self.pipelines))
+            logger.info(f"Evicting model '{oldest_lang}' to free memory (loaded: {len(self.pipelines)}/{self.MAX_LOADED_MODELS})")
+            
+            # Remove from pipelines
+            del self.pipelines[oldest_lang]
+            if oldest_lang in self.last_used:
+                del self.last_used[oldest_lang]
+            
+            # Force garbage collection to free memory
+            import gc
+            gc.collect()
+    
+    def get_loaded_models(self) -> list:
+        """Return list of currently loaded model languages."""
+        return list(self.pipelines.keys())
 
     def _load_model(self, lang_code: str):
         """
         Downloads (if necessary) and loads the model for the given language.
         """
-        print(f"Checking availability of model for '{lang_code}'...")
+        logger.info(f"Loading Stanza model for '{lang_code}'...")
         
         # Use environment variable for resources directory if set
         resources_dir = os.environ.get("STANZA_RESOURCES_DIR", None)
         
         try:
-            # Only download if not present. Stanza handles this usually.
-            print(f"Initializing pipeline for '{lang_code}'...")
-            
             kwargs = {}
             if lang_code == 'tr':
                 kwargs['tokenize_no_ssplit'] = True
@@ -68,12 +99,13 @@ class StanzaManager:
                 model_dir=resources_dir,
                 processors=processors_list,
                 download_method=stanza.DownloadMethod.REUSE_RESOURCES,
+                verbose=False,  # Reduce console spam
                 **kwargs
             )
+            logger.info(f"Model '{lang_code}' loaded successfully. Active models: {list(self.pipelines.keys())}")
+            
         except Exception as e:
-            print(f"Error loading model for {lang_code}: {e}")
-            # Attempt download explicitly if pipeline creation failed due to missing model
-            print(f"Downloading model for '{lang_code}'...")
+            logger.warning(f"Model not found for {lang_code}, downloading: {e}")
             
             processors_list = self.LANGUAGE_PROCESSORS.get(lang_code, 'tokenize,mwt,pos,lemma,depparse')
             stanza.download(lang_code, model_dir=resources_dir, processors=processors_list)
@@ -87,8 +119,10 @@ class StanzaManager:
                 model_dir=resources_dir,
                 processors=processors_list,
                 download_method=stanza.DownloadMethod.REUSE_RESOURCES,
+                verbose=False,
                 **kwargs
             )
+            logger.info(f"Model '{lang_code}' downloaded and loaded. Active models: {list(self.pipelines.keys())}")
 
 # Global instance
 stanza_manager = StanzaManager()

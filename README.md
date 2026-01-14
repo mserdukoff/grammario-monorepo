@@ -1,129 +1,216 @@
 # Grammario
 
-Grammario is a linguistic deconstruction tool that provides deep grammatical analysis of sentences in multiple languages. It breaks down sentences into their constituent parts (tokens), analyzes their dependencies, and uses advanced Large Language Models (LLMs) to provide pedagogical explanations for language learners.
+<div align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/FastAPI-0.109-009688?style=flat-square&logo=fastapi" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase" alt="Supabase">
+  <img src="https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat-square&logo=stripe" alt="Stripe">
+</div>
+
+<br>
+
+**Grammario** is a production-ready linguistic analysis platform that helps language learners deeply understand grammar through interactive visualizations and AI-powered explanations.
 
 ## 🌟 Features
 
-*   **Deep Linguistic Analysis**: Uses [Stanza](https://stanfordnlp.github.io/stanza/) (Stanford NLP) for state-of-the-art tokenization, lemmatization, POS tagging, and dependency parsing.
-*   **Pedagogical Explanations**: Integrates with LLMs (OpenAI GPT-4o, Google Gemini, Anthropic Claude) via OpenRouter to explain grammar concepts like a professor.
-*   **Interactive UI**: A React-based frontend that visualizes sentence structure using interactive nodes.
-*   **Multi-language Support**: Currently supports **Italian (it)**, **Spanish (es)**, **German (de)**, **Russian (ru)**, and **Turkish (tr)**.
-*   **Smart Caching**: Caches explanations to ensure instant responses for repeated queries.
+### Core Analysis
+- **Deep Linguistic Analysis** - Stanford NLP (Stanza) for tokenization, lemmatization, POS tagging, and dependency parsing
+- **AI Explanations** - LLM-powered pedagogical insights explaining grammar concepts
+- **Interactive Visualization** - ReactFlow-based syntax tree and linear views
+- **5 Languages** - Italian, Spanish, German, Russian, Turkish
+
+### Gamification (Duolingo-inspired)
+- 🔥 **Streaks** - Daily learning habit tracking
+- ⚡ **XP & Levels** - Progress through 10+ levels
+- 🎯 **Daily Goals** - Customizable targets
+- 🏆 **Achievements** - 15+ unlockable badges
+- 📊 **Stats Dashboard** - Track your learning journey
+
+### Production Features
+- 🔐 **Authentication** - Email/password + Google OAuth via Supabase
+- 💳 **Payments** - Stripe subscription for Pro tier
+- 📝 **History** - Save and favorite analyses
+- 📚 **Vocabulary** - Spaced repetition system (SM-2)
+- 🔊 **Text-to-Speech** - Native pronunciation
 
 ## 🏗 Architecture
 
-The project is structured as a monorepo:
+```
+┌─────────────────────────────────────────────────────────┐
+│                 FRONTEND (Next.js 16)                   │
+│          React 19 • Tailwind • ReactFlow • Zustand      │
+└─────────────────────────────────────────────────────────┘
+                           │
+           ┌───────────────┴───────────────┐
+           ▼                               ▼
+┌─────────────────────┐         ┌─────────────────────────┐
+│  SUPABASE (BaaS)    │         │   BACKEND (FastAPI)     │
+│  • Auth (JWT)       │         │   • NLP (Stanza)        │
+│  • PostgreSQL       │◄───────►│   • LLM (OpenRouter)    │
+│  • Realtime         │         │   • Stripe Webhooks     │
+│  • Row-Level Sec.   │         │   • Rate Limiting       │
+└─────────────────────┘         └─────────────────────────┘
+```
 
-*   **`frontend/`**: Next.js 14 application (React, TypeScript, Tailwind CSS, React Flow).
-*   **`backend/`**: FastAPI application (Python) handling NLP processing and LLM orchestration.
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 20+
+- Python 3.11+
+- [Supabase Account](https://supabase.com) (free tier works)
+- [Stripe Account](https://stripe.com) (for payments)
+- [OpenRouter API Key](https://openrouter.ai) (for LLM)
 
-*   **Docker** and **Docker Compose** (Recommended for easiest setup)
-*   *Or* Node.js 18+ and Python 3.11+
+### 1. Clone & Install
 
-### Quick Start (Docker)
+```bash
+git clone https://github.com/mserdukoff/grammario.git
+cd grammario
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/mserdukoff/grammario-monorepo.git
-    cd grammario-monorepo
-    ```
+# Backend
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-2.  **Set up Environment Variables:**
-    Create a `.env` file in the `backend` directory:
-    ```bash
-    # backend/.env
-    OPENROUTER_KEY=your_openrouter_key_here
-    # Optional: OPENAI_API_KEY=your_openai_key_here (Fallback)
-    ```
+# Frontend
+cd ../frontend
+npm install
+```
 
-3.  **Run with Docker Compose:**
-    *(Note: The first run will take a few minutes to download the NLP models)*
-    ```bash
-    docker-compose up --build
-    ```
+### 2. Set Up Supabase
 
-4.  **Access the App:**
-    *   Frontend: [http://localhost:3000](http://localhost:3000)
-    *   Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+1. Create a new Supabase project
+2. Go to SQL Editor and run `supabase/schema.sql`
+3. Enable Google OAuth in Authentication → Providers
+4. Copy your project URL and anon key
 
----
+### 3. Configure Environment
 
-### Manual Setup (Development)
+```bash
+# Root .env
+cp env.example .env
 
-#### Backend
+# Frontend
+cd frontend
+cp .env.example .env.local
+```
 
-1.  Navigate to `backend`:
-    ```bash
-    cd backend
-    ```
+Fill in your credentials:
+- `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_JWT_SECRET` (Settings → API → JWT Secret)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `OPENROUTER_KEY`
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
 
-2.  Create a virtual environment and activate it:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
+### 4. Run Development
 
-3.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
+```bash
+# Terminal 1: Backend
+cd backend
+source venv/bin/activate
+uvicorn app.main:app --reload
 
-4.  Run the server:
-    ```bash
-    python -m uvicorn app.main:app --reload
-    ```
+# Terminal 2: Frontend
+cd frontend
+npm run dev
+```
 
-#### Frontend
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/docs
 
-1.  Navigate to `frontend`:
-    ```bash
-    cd frontend
-    ```
+## 🐳 Docker Deployment
 
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
+```bash
+# Build and run
+docker-compose up --build
 
-3.  Run the development server:
-    ```bash
-    npm run dev
-    ```
+# With environment file
+docker-compose --env-file .env up
+```
 
-## 🛠 Deployment
+## 📱 Database Schema
 
-### 🚄 Railway (Recommended)
+```sql
+users           -- Profiles, subscription, gamification stats
+analyses        -- Sentence analyses with JSONB nodes
+vocabulary      -- Saved words with spaced repetition
+daily_goals     -- Daily target tracking
+achievements    -- Badge definitions
+user_achievements  -- Unlocked badges
+```
 
-Since this is a monorepo, you need to tell Railway where to find the services.
+See `supabase/schema.sql` for full schema with RLS policies.
 
-1.  **Push your code** to GitHub.
-2.  **Create a New Project** on Railway -> Deploy from GitHub.
-3.  **Add Two Services** from the same repo:
-    *   **Service 1 (Backend)**:
-        *   Go to Settings -> **Root Directory**: Set to `/backend`
-        *   Add Variable: `OPENROUTER_KEY`
-    *   **Service 2 (Frontend)**:
-        *   Go to Settings -> **Root Directory**: Set to `/frontend`
-        *   Add Variable: `API_URL` -> `https://<your-backend-url>.up.railway.app` (You get this URL after the backend deploys)
+## 💳 Stripe Setup
 
-### 🐳 Docker & Other Providers
+1. Create a Product in Stripe Dashboard
+2. Add a $5/month Price
+3. Set up webhook endpoint: `https://yourdomain.com/api/v1/billing/webhook`
+4. Listen for events:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
 
-This project includes a `docker-compose.yml` for orchestration and optimized `Dockerfile`s for both services.
+## 🚄 Deploy to Production
 
-*   **Backend**: Python 3.11 Slim image. Pre-downloads NLP models during build.
-*   **Frontend**: Next.js Standalone build (Alpine Linux). Extremely lightweight.
+### Railway (Recommended)
+1. Push to GitHub
+2. Create Railway project → Deploy from GitHub
+3. Add two services from same repo:
+   - **Backend**: Root Directory = `/backend`
+   - **Frontend**: Root Directory = `/frontend`
+4. Add environment variables to each service
 
-You can deploy to any provider that supports Docker Compose or individual Dockerfiles (Render, Fly.io, DigitalOcean).
+### Vercel + Railway
+- Frontend on Vercel (automatic Next.js optimization)
+- Backend on Railway (Python support)
+
+### Other Platforms
+Docker support works on: Render, Fly.io, DigitalOcean, AWS ECS
+
+## 📊 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| State | Zustand (persisted), TanStack Query |
+| Visualization | ReactFlow, Dagre, Framer Motion |
+| Backend | FastAPI, Pydantic, Stanza NLP |
+| Database | PostgreSQL (via Supabase) |
+| Auth | Supabase Auth (JWT) |
+| Payments | Stripe Subscriptions |
+| LLM | OpenRouter (GPT-4, Claude, Gemini) |
+| Deployment | Docker, Railway |
+
+## 🎯 Roadmap
+
+- [ ] More languages (French, Portuguese, Japanese)
+- [ ] Mobile app (React Native)
+- [ ] Sentence collections / lessons
+- [ ] Community features (share analyses)
+- [ ] API access for Pro users
+- [ ] Browser extension
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! Please read our contributing guidelines.
+
+```bash
+# Run tests
+cd backend && pytest
+cd frontend && npm test
+
+# Lint
+cd frontend && npm run lint
+```
 
 ## 📄 License
 
-[MIT](LICENSE)
+MIT License - see [LICENSE](LICENSE) for details.
 
+---
+
+<div align="center">
+  Built with ❤️ for language learners
+</div>

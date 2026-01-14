@@ -34,8 +34,9 @@ class NLPService:
         pedagogical_data = None
         try:
             pedagogical_data = llm_service.explain_sentence(text, lang_code)
+            logger.info(f"LLM explanation received: translation={pedagogical_data.translation[:30] if pedagogical_data.translation else 'None'}..., concepts={len(pedagogical_data.concepts)}, tips={len(pedagogical_data.tips) if pedagogical_data.tips else 0}")
         except Exception as e:
-            logger.error(f"Failed to get LLM explanation: {e}")
+            logger.error(f"Failed to get LLM explanation: {e}", exc_info=True)
             # We continue without pedagogical data if LLM fails
 
         # 5. Construct Response

@@ -29,7 +29,9 @@ COPY . .
 
 # Pre-download Stanza models
 # This adds time to the *build* but makes *startup* much faster
-RUN python download_models.py
+# COMMENTED OUT: Causing Image Size > 4GB issues on free tiers.
+# Models will be downloaded at runtime (lazy loading) to a persistent volume instead.
+# RUN python download_models.py
 
 # Expose the port
 EXPOSE 8000

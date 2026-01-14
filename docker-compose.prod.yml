@@ -1,0 +1,97 @@
+# Production Docker Compose for Grammario
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: grammario-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM Configuration
+      - OPENROUTER_KEY=${OPENROUTER_KEY}
+      - LLM_MODEL=${LLM_MODEL:-anthropic/claude-sonnet-4}
+      
+      # Supabase Configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      
+      # CORS - Update with your domain
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://grammario.app,https://www.grammario.app}
+      
+      # Memory optimization - keep max 2 models loaded on 2GB RAM
+      - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-2}
+      
+      # Production mode
+      - DEBUG=false
+    deploy:
+      resources:
+        limits:
+          memory: 1800M
+        reservations:
+          memory: 1024M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: grammario-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Certbot for SSL certificate renewal
+  certbot:
+    image: certbot/certbot
+    container_name: grammario-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  # Optional: Watchtower for automatic updates
+  watchtower:
+    image: containrrr/watchtower
+    container_name: grammario-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400  # Check daily
+      - WATCHTOWER_INCLUDE_STOPPED=false
+    profiles:
+      - autoupdate  # Only starts with --profile autoupdate
+
+networks:
+  default:
+    name: grammario-network
