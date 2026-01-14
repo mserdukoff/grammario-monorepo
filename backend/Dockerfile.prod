@@ -1,7 +1,7 @@
 # Production Dockerfile for Grammario Backend
 # Optimized for size and startup time
 
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,9 +13,10 @@ WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Download Stanza models during build (cached in image)
+ENV STANZA_RESOURCES_DIR=/app/stanza_resources
 COPY download_models.py .
 RUN python download_models.py
 
@@ -33,18 +34,18 @@ RUN useradd --create-home --shell /bin/bash appuser
 
 WORKDIR /app
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /home/appuser/.local
+# Copy Python packages from builder (site-packages)
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy Stanza models from builder
-COPY --from=builder /root/stanza_resources /home/appuser/stanza_resources
+COPY --from=builder /app/stanza_resources /home/appuser/stanza_resources
 
 # Copy application code
 COPY --chown=appuser:appuser . .
 
 # Set environment
-ENV PATH=/home/appuser/.local/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     STANZA_RESOURCES_DIR=/home/appuser/stanza_resources
 
@@ -52,7 +53,7 @@ ENV PATH=/home/appuser/.local/bin:$PATH \
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Expose port
