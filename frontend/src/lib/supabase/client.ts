@@ -2,17 +2,16 @@
  * Supabase Browser Client
  * 
  * Creates a Supabase client for use in Client Components.
- * Uses cookies for session storage to match server-side auth.
+ * Uses standard @supabase/supabase-js with localStorage.
  * 
  * IMPORTANT: Only use in browser environment (client components with useEffect)
  */
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
 // Singleton for client-side usage
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let client: any = null
-let clientCreationAttempted = false
 
 export function createClient() {
   // Never create during SSR
@@ -28,14 +27,8 @@ export function createClient() {
     return null
   }
   
-  console.log("[Supabase] Creating browser client for:", supabaseUrl)
-  
-  try {
-    return createBrowserClient<Database>(supabaseUrl, supabaseKey)
-  } catch (error) {
-    console.error("[Supabase] Failed to create client:", error)
-    return null
-  }
+  console.log("[Supabase] Creating client for:", supabaseUrl)
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
 }
 
 export function getSupabaseClient() {
@@ -44,9 +37,7 @@ export function getSupabaseClient() {
     return null
   }
   
-  // Only try to create once to avoid infinite loops
-  if (!client && !clientCreationAttempted) {
-    clientCreationAttempted = true
+  if (!client) {
     client = createClient()
   }
   return client
