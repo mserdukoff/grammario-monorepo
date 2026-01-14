@@ -7,6 +7,17 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl
+  
+  // Handle OAuth callback code on root URL - redirect to proper callback handler
+  // This happens when Supabase redirects with code to Site URL instead of redirectTo
+  if (pathname === "/" && searchParams.has("code")) {
+    const code = searchParams.get("code")
+    const redirectUrl = new URL("/auth/callback", request.url)
+    redirectUrl.searchParams.set("code", code!)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,

@@ -6,7 +6,7 @@
  * Displays user gamification stats: XP, level, streak, daily goal.
  */
 import { useAuth, xpProgress, xpForNextLevel, XP_PER_LEVEL } from "@/lib/auth-context"
-import { Flame, Zap, Target, Trophy, TrendingUp } from "lucide-react"
+import { Flame, Zap, Target, Trophy, TrendingUp, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface StatsPanelProps {
@@ -16,7 +16,16 @@ interface StatsPanelProps {
 }
 
 export function StatsPanel({ dailyGoal, className, compact = false }: StatsPanelProps) {
-  const { profile } = useAuth()
+  const { profile, profileLoading } = useAuth()
+
+  if (profileLoading) {
+    return (
+      <div className={cn("flex items-center justify-center py-8", className)}>
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading stats...</span>
+      </div>
+    )
+  }
 
   if (!profile) return null
 

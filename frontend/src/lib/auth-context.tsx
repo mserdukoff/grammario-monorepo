@@ -36,6 +36,7 @@ interface AuthContextType {
   profile: User | null
   session: Session | null
   loading: boolean
+  profileLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
@@ -62,6 +63,11 @@ async function createOrUpdateUserProfile(
     .select("*")
     .eq("id", userId)
     .single()
+
+  // Log for debugging - can be removed later
+  if (fetchError && fetchError.code !== "PGRST116") {
+    console.error("Error fetching user profile:", fetchError)
+  }
 
   if (existing && !fetchError) {
     // Existing user - update streak and last active
@@ -136,17 +142,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
 
   const supabase = getSupabaseClient()
 
   const loadProfile = useCallback(async (authUser: SupabaseUser) => {
-    const userProfile = await createOrUpdateUserProfile(
-      authUser.id,
-      authUser.email || "",
-      authUser.user_metadata?.full_name || authUser.user_metadata?.name,
-      authUser.user_metadata?.avatar_url
-    )
-    setProfile(userProfile)
+    setProfileLoading(true)
+    try {
+      const userProfile = await createOrUpdateUserProfile(
+        authUser.id,
+        authUser.email || "",
+        authUser.user_metadata?.full_name || authUser.user_metadata?.name,
+        authUser.user_metadata?.avatar_url
+      )
+      setProfile(userProfile)
+    } catch (error) {
+      console.error("Failed to load profile:", error)
+    } finally {
+      setProfileLoading(false)
+    }
   }, [])
 
   // Listen to auth state changes
@@ -236,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         session,
         loading,
+        profileLoading,
         signIn,
         signUp,
         signInWithGoogle,
