@@ -5,9 +5,13 @@
  * This client handles auth state automatically via cookies.
  */
 import { createBrowserClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-export function createClient() {
+// Singleton for client-side usage
+let client: SupabaseClient<Database> | null = null
+
+export function createClient(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
@@ -18,13 +22,18 @@ export function createClient() {
   return createBrowserClient<Database>(supabaseUrl, supabaseKey)
 }
 
-// Singleton for client-side usage
-let client: ReturnType<typeof createClient> | null = null
-
-export function getSupabaseClient() {
-  // Only create client in browser environment
+export function getSupabaseClient(): SupabaseClient<Database> {
+  // During SSR, return a dummy that will be replaced on client
   if (typeof window === "undefined") {
-    throw new Error("getSupabaseClient can only be used in browser")
+    // Return existing client or create one that will work during hydration
+    if (!client) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (supabaseUrl && supabaseKey) {
+        client = createBrowserClient<Database>(supabaseUrl, supabaseKey)
+      }
+    }
+    return client as SupabaseClient<Database>
   }
   
   if (!client) {
