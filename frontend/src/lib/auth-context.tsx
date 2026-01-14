@@ -174,16 +174,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     console.log("[Auth] Supabase client exists, calling getSession...")
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-      console.log("[Auth] getSession returned:", !!data.session)
-      setSession(data.session)
-      setUser(data.session?.user ?? null)
-      if (data.session?.user) {
-        loadProfile(data.session.user)
-      }
-      setLoading(false)
-    })
+    supabase.auth.getSession()
+      .then(({ data }: { data: { session: Session | null } }) => {
+        console.log("[Auth] getSession returned:", !!data.session)
+        setSession(data.session)
+        setUser(data.session?.user ?? null)
+        if (data.session?.user) {
+          loadProfile(data.session.user)
+        }
+        setLoading(false)
+      })
+      .catch((error: Error) => {
+        console.error("[Auth] getSession error:", error)
+        setLoading(false)
+      })
 
     // Listen for auth changes
     const {
