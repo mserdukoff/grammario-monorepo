@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Star, Download } from "lucide-react"
+import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingDemo } from "@/components/LandingDemo"
 
@@ -11,12 +11,6 @@ export function HeroSection() {
       <div className="container flex flex-col lg:flex-row items-center gap-12">
         {/* Left Content */}
         <div className="flex-1 space-y-8 text-center lg:text-left z-20">
-          <div className="inline-flex items-center rounded-full bg-indigo-500/10 px-3 py-1 text-sm font-medium text-indigo-400 border border-indigo-500/20 backdrop-blur-sm">
-            <span className="flex h-2 w-2 rounded-full bg-indigo-500 mr-2 animate-pulse"></span>
-            Version 1.0 is now live
-            <ArrowRight className="ml-2 h-3 w-3" />
-          </div>
-
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
             Visual Grammar <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400">

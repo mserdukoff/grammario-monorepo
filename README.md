@@ -209,8 +209,6 @@ cd frontend && npm run lint
 
 MIT License - see [LICENSE](LICENSE) for details.
 
----
-
-<div align="center">
+---<div align="center">
   Built with ❤️ for language learners
 </div>
