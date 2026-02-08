@@ -160,17 +160,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false)
 
   const loadProfile = useCallback(async (authUser: SupabaseUser) => {
+    console.log("[Auth] loadProfile called for user:", authUser.email)
     setProfileLoading(true)
     try {
+      console.log("[Auth] Calling createOrUpdateUserProfile...")
       const userProfile = await createOrUpdateUserProfile(
         authUser.id,
         authUser.email || "",
         authUser.user_metadata?.full_name || authUser.user_metadata?.name,
         authUser.user_metadata?.avatar_url
       )
+      console.log("[Auth] Profile loaded:", !!userProfile)
       setProfile(userProfile)
     } catch (error) {
-      console.error("Failed to load profile:", error)
+      console.error("[Auth] Failed to load profile:", error)
       // Set a basic profile even if DB fails - don't block the user
       setProfile({
         id: authUser.id,
@@ -223,22 +226,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      console.log("[Auth] onAuthStateChange event:", event, "session:", !!session)
+      console.log("[Auth] onAuthStateChange event:", event, "session:", !!session, "user:", !!session?.user)
 
-      if (!mounted) return
+      if (!mounted) {
+        console.log("[Auth] Component unmounted, skipping auth state change")
+        return
+      }
 
       clearTimeout(safetyTimeout)
       sessionInitialized = true
 
+      console.log("[Auth] Setting session and user state...")
       setSession(session)
       setUser(session?.user ?? null)
 
       if (session?.user) {
-        await loadProfile(session.user)
+        console.log("[Auth] Session has user, loading profile...")
+        try {
+          await loadProfile(session.user)
+          console.log("[Auth] Profile loaded successfully")
+        } catch (error) {
+          console.error("[Auth] Error loading profile:", error)
+        }
       } else {
+        console.log("[Auth] No user in session, clearing profile")
         setProfile(null)
       }
 
+      console.log("[Auth] Setting loading to false")
       setLoading(false)
     })
 
@@ -246,30 +261,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This restores the session from localStorage on page refresh
     const initializeSession = async () => {
       try {
-        console.log("[Auth] Initializing session...")
+        console.log("[Auth] initializeSession: Starting...")
         const { data: { session }, error } = await supabase.auth.getSession()
 
-        if (!mounted) return
+        console.log("[Auth] initializeSession: getSession returned, session:", !!session, "error:", !!error)
+
+        if (!mounted) {
+          console.log("[Auth] initializeSession: Component unmounted, aborting")
+          return
+        }
 
         clearTimeout(safetyTimeout)
         sessionInitialized = true
 
         if (error) {
-          console.error("[Auth] getSession error:", error)
+          console.error("[Auth] initializeSession: getSession error:", error)
           setLoading(false)
           return
         }
 
-        console.log("[Auth] Session initialized:", !!session)
+        console.log("[Auth] initializeSession: Session initialized:", !!session)
 
         // Only update state if we have a session and haven't already initialized
         // (onAuthStateChange might have already fired)
         if (session) {
+          console.log("[Auth] initializeSession: Setting session and user state")
           setSession(session)
           setUser(session.user)
+          console.log("[Auth] initializeSession: Loading profile...")
           await loadProfile(session.user)
+          console.log("[Auth] initializeSession: Profile loaded")
+        } else {
+          console.log("[Auth] initializeSession: No session found")
         }
 
+        console.log("[Auth] initializeSession: Setting loading to false")
         setLoading(false)
       } catch (error) {
         if (mounted) {
