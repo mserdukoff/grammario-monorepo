@@ -21,27 +21,22 @@ export default function AuthCallback() {
   // Redirect once user is authenticated
   useEffect(() => {
     if (!loading && user) {
-      console.log("[Auth Callback] User authenticated, redirecting to /app")
       // Use replace to avoid back button issues
       router.replace("/app")
     } else if (!loading && !user && error) {
       // If we have an error and no user after loading completes, stay on error screen
-      console.log("[Auth Callback] Authentication failed")
     }
   }, [user, loading, error, router])
 
   // Handle PKCE flow (code in query params) or check for errors
   useEffect(() => {
     const handleCallback = async () => {
-      console.log("[Auth Callback] URL:", window.location.href)
-      
       // Check for error in hash (OAuth error)
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       const hashError = hashParams.get("error")
       const hashErrorDesc = hashParams.get("error_description")
       
       if (hashError) {
-        console.error("[Auth Callback] OAuth error:", hashError, hashErrorDesc)
         setError(hashErrorDesc || hashError)
         return
       }
@@ -49,7 +44,6 @@ export default function AuthCallback() {
       // Check for access_token in hash (implicit flow)
       // The AuthProvider's onAuthStateChange will handle this automatically
       if (hashParams.get("access_token")) {
-        console.log("[Auth Callback] Implicit flow detected, waiting for AuthProvider...")
         setStatus("Processing authentication...")
         return // AuthProvider will handle it
       }
@@ -61,13 +55,11 @@ export default function AuthCallback() {
       const errorDesc = params.get("error_description")
       
       if (errorParam) {
-        console.error("[Auth Callback] OAuth error in query:", errorParam, errorDesc)
         setError(errorDesc || errorParam)
         return
       }
       
       if (code) {
-        console.log("[Auth Callback] PKCE flow detected, exchanging code...")
         setStatus("Exchanging authorization code...")
         
         const supabase = getSupabaseClient()
@@ -80,24 +72,20 @@ export default function AuthCallback() {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
           
           if (exchangeError) {
-            console.error("[Auth Callback] Code exchange error:", exchangeError)
             setError(exchangeError.message)
             return
           }
           
-          console.log("[Auth Callback] Code exchange successful")
           setStatus("Sign in successful!")
           // The onAuthStateChange in AuthProvider will update user state
           // and trigger the redirect via the first useEffect
         } catch (err) {
-          console.error("[Auth Callback] Exception:", err)
           setError("Authentication failed. Please try again.")
         }
         return
       }
 
       // No auth data in URL - wait a moment to see if AuthProvider picks up existing session
-      console.log("[Auth Callback] No auth data in URL, checking session...")
       setStatus("Checking authentication...")
       
       // Give AuthProvider time to check existing session

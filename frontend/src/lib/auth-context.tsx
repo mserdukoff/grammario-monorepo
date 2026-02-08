@@ -58,21 +58,17 @@ async function createOrUpdateUserProfile(
     const supabase = getSupabaseClient() as any
 
     if (!supabase) {
-      console.error("[Profile] Supabase client not available")
       return null
     }
 
-    console.log("[Profile] Starting createOrUpdateUserProfile for:", userId)
     const today = new Date().toISOString().split("T")[0]
 
     // Check if user exists with timeout to prevent hanging
-    console.log("[Profile] Querying users table...")
     const fetchStart = Date.now()
     
     // Use AbortController for proper timeout handling
     const controller = new AbortController()
     const timeoutId = setTimeout(() => {
-      console.warn("[Profile] Query taking too long, aborting...")
       controller.abort()
     }, 8000) // 8 second timeout (increased from 3s)
 
@@ -90,25 +86,14 @@ async function createOrUpdateUserProfile(
       existing = result.data
       fetchError = result.error
 
-      const fetchDuration = Date.now() - fetchStart
-      console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
     } catch (error: any) {
       clearTimeout(timeoutId)
-      const fetchDuration = Date.now() - fetchStart
-      
-      if (error.name === 'AbortError' || error.message?.includes('aborted')) {
-        console.error(`[Profile] Query timed out after ${fetchDuration}ms`)
-      } else {
-        console.error(`[Profile] Query failed after ${fetchDuration}ms:`, error.message)
-      }
-
       // If query times out or fails, return null to trigger fallback
       return null
     }
 
     // Log for debugging
     if (fetchError) {
-      console.error("[Profile] Error fetching user profile:", fetchError)
       // Don't throw - we'll try to create the user instead
     }
 
@@ -148,17 +133,13 @@ async function createOrUpdateUserProfile(
         .maybeSingle()
 
       if (error) {
-        console.error("[Profile] Error updating user:", error)
         // Return existing data if update fails
         return existingUser
       }
 
-      console.log("[Profile] User updated successfully")
       return updated as User
     } else {
       // New user - create profile
-      console.log("[Profile] User doesn't exist, creating new profile...")
-      const insertStart = Date.now()
       const { data: newUser, error } = await supabase
         .from("users")
         .insert({
@@ -177,19 +158,13 @@ async function createOrUpdateUserProfile(
         .select()
         .maybeSingle()
 
-      const insertDuration = Date.now() - insertStart
-      console.log(`[Profile] Insert completed in ${insertDuration}ms - success:`, !!newUser, "error:", error?.message || "none")
-
       if (error) {
-        console.error("[Profile] Error creating user:", error)
         return null
       }
 
-      console.log("[Profile] User created successfully")
       return newUser as User
     }
   } catch (error) {
-    console.error("[Profile] Unexpected error in createOrUpdateUserProfile:", error)
     return null
   }
 }
@@ -202,21 +177,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false)
 
   const loadProfile = useCallback(async (authUser: SupabaseUser) => {
-    console.log("[Auth] loadProfile called for user:", authUser.email)
     setProfileLoading(true)
     try {
-      console.log("[Auth] Calling createOrUpdateUserProfile...")
       const userProfile = await createOrUpdateUserProfile(
         authUser.id,
         authUser.email || "",
         authUser.user_metadata?.full_name || authUser.user_metadata?.name,
         authUser.user_metadata?.avatar_url
       )
-      console.log("[Auth] Profile loaded:", !!userProfile)
 
       // If profile loading failed (returned null), use fallback
       if (!userProfile) {
-        console.warn("[Auth] Profile returned null, using fallback profile")
         setProfile({
           id: authUser.id,
           email: authUser.email || "",
@@ -236,7 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(userProfile)
       }
     } catch (error) {
-      console.error("[Auth] Failed to load profile:", error)
       // Set a basic profile even if DB fails - don't block the user
       setProfile({
         id: authUser.id,
@@ -260,12 +230,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen to auth state changes - only runs in browser
   useEffect(() => {
-    console.log("[Auth] useEffect running...")
     const supabase = getSupabaseClient()
 
     // During SSR or if client not available, just set loading to false
     if (!supabase) {
-      console.log("[Auth] No supabase client (SSR), setting loading false")
       setLoading(false)
       return
     }
@@ -276,7 +244,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety timeout - never let loading hang forever
     const safetyTimeout = setTimeout(() => {
       if (mounted && !sessionInitialized) {
-        console.warn("[Auth] Safety timeout reached - forcing loading to false")
         setLoading(false)
       }
     }, 10000) // Increased to 10s to match query timeout
@@ -289,32 +256,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      console.log("[Auth] onAuthStateChange event:", event, "session:", !!session, "user:", !!session?.user)
-
       if (!mounted) {
-        console.log("[Auth] Component unmounted, skipping auth state change")
         return
       }
 
       clearTimeout(safetyTimeout)
       sessionInitialized = true
 
-      console.log("[Auth] Setting session and user state...")
       setSession(session)
       setUser(session?.user ?? null)
       
       // Set loading to false immediately so UI updates
-      console.log("[Auth] Setting loading to false")
       setLoading(false)
 
       if (session?.user) {
-        console.log("[Auth] Session has user, starting profile load in background...")
         // Don't await profile loading - let it run in background
         loadProfile(session.user).catch((error) => {
-          console.error("[Auth] Error loading profile in background:", error)
+          // Silent catch
         })
       } else {
-        console.log("[Auth] No user in session, clearing profile")
         setProfile(null)
       }
     })
@@ -323,13 +283,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This restores the session from localStorage on page refresh
     const initializeSession = async () => {
       try {
-        console.log("[Auth] initializeSession: Starting...")
         const { data: { session }, error } = await supabase.auth.getSession()
 
-        console.log("[Auth] initializeSession: getSession returned, session:", !!session, "error:", !!error)
-
         if (!mounted) {
-          console.log("[Auth] initializeSession: Component unmounted, aborting")
           return
         }
 
@@ -337,34 +293,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionInitialized = true
 
         if (error) {
-          console.error("[Auth] initializeSession: getSession error:", error)
           setLoading(false)
           return
         }
 
-        console.log("[Auth] initializeSession: Session initialized:", !!session)
-
         // Only update state if we have a session and haven't already initialized
         // (onAuthStateChange might have already fired)
         if (session) {
-          console.log("[Auth] initializeSession: Setting session and user state")
           setSession(session)
           setUser(session.user)
           
           // Don't await profile loading - let it run in background
-          console.log("[Auth] initializeSession: Starting profile load in background...")
           loadProfile(session.user).catch((error) => {
-            console.error("[Auth] Error loading profile in background:", error)
+            // Silent catch
           })
-        } else {
-          console.log("[Auth] initializeSession: No session found")
         }
 
-        console.log("[Auth] initializeSession: Setting loading to false")
         setLoading(false)
       } catch (error) {
         if (mounted) {
-          console.error("[Auth] Session initialization error:", error)
           clearTimeout(safetyTimeout)
           setLoading(false)
         }
@@ -424,7 +371,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut()
       }
     } catch (error) {
-      console.error("[Auth] Sign out error:", error)
       // Continue with local cleanup even if Supabase signOut fails
     } finally {
       // Always clear local state, regardless of API call success
@@ -438,7 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("grammario-auth-token")
           localStorage.removeItem("sb-auth-token")
         } catch (e) {
-          console.error("[Auth] Failed to clear localStorage:", e)
+          // Ignore
         }
       }
     }

@@ -23,11 +23,9 @@ export function createClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("[Supabase] MISSING ENV VARS")
     return null
   }
 
-  console.log("[Supabase] Creating client for:", supabaseUrl)
   return createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       // Ensure sessions persist in localStorage
@@ -56,11 +54,6 @@ export function getSupabaseClient() {
 
   if (!client) {
     client = createClient()
-    // Log storage info for debugging production issues
-    if (client) {
-      console.log("[Supabase] Client initialized for origin:", window.location.origin)
-      console.log("[Supabase] localStorage available:", typeof window.localStorage !== "undefined")
-    }
   }
   return client
 }
