@@ -62,14 +62,20 @@ async function createOrUpdateUserProfile(
       return null
     }
 
+    console.log("[Profile] Starting createOrUpdateUserProfile for:", userId)
     const today = new Date().toISOString().split("T")[0]
 
     // Check if user exists
+    console.log("[Profile] Querying users table...")
+    const fetchStart = Date.now()
     const { data: existing, error: fetchError } = await supabase
       .from("users")
       .select("*")
       .eq("id", userId)
       .maybeSingle() // Use maybeSingle to avoid errors when no rows found
+
+    const fetchDuration = Date.now() - fetchStart
+    console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
 
     // Log for debugging
     if (fetchError) {
@@ -118,9 +124,12 @@ async function createOrUpdateUserProfile(
         return existingUser
       }
 
+      console.log("[Profile] User updated successfully")
       return updated as User
     } else {
       // New user - create profile
+      console.log("[Profile] User doesn't exist, creating new profile...")
+      const insertStart = Date.now()
       const { data: newUser, error } = await supabase
         .from("users")
         .insert({
@@ -139,11 +148,15 @@ async function createOrUpdateUserProfile(
         .select()
         .maybeSingle()
 
+      const insertDuration = Date.now() - insertStart
+      console.log(`[Profile] Insert completed in ${insertDuration}ms - success:`, !!newUser, "error:", error?.message || "none")
+
       if (error) {
         console.error("[Profile] Error creating user:", error)
         return null
       }
 
+      console.log("[Profile] User created successfully")
       return newUser as User
     }
   } catch (error) {
