@@ -69,32 +69,32 @@ async function createOrUpdateUserProfile(
     console.log("[Profile] Querying users table...")
     const fetchStart = Date.now()
 
-    // Create abort controller for timeout
-    const abortController = new AbortController()
-    const timeoutId = setTimeout(() => {
-      console.warn("[Profile] Query taking too long, aborting...")
-      abortController.abort()
-    }, 5000) // 5 second timeout
+    // Use Promise.race for timeout
+    const queryPromise = supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle()
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        console.warn("[Profile] Query timeout after 3s")
+        reject(new Error("Query timeout"))
+      }, 3000) // 3 second timeout
+    })
 
     let existing, fetchError
     try {
-      const result = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .abortSignal(abortController.signal)
-        .maybeSingle()
-
-      clearTimeout(timeoutId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = await Promise.race([queryPromise, timeoutPromise])
       existing = result.data
       fetchError = result.error
 
       const fetchDuration = Date.now() - fetchStart
       console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
     } catch (error: any) {
-      clearTimeout(timeoutId)
       const fetchDuration = Date.now() - fetchStart
-      console.error(`[Profile] Query failed after ${fetchDuration}ms:`, error)
+      console.error(`[Profile] Query timed out or failed after ${fetchDuration}ms:`, error.message)
 
       // If query times out or fails, return null to trigger fallback
       return null
