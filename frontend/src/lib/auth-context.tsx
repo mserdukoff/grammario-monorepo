@@ -65,17 +65,40 @@ async function createOrUpdateUserProfile(
     console.log("[Profile] Starting createOrUpdateUserProfile for:", userId)
     const today = new Date().toISOString().split("T")[0]
 
-    // Check if user exists
+    // Check if user exists with timeout to prevent hanging
     console.log("[Profile] Querying users table...")
     const fetchStart = Date.now()
-    const { data: existing, error: fetchError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle() // Use maybeSingle to avoid errors when no rows found
 
-    const fetchDuration = Date.now() - fetchStart
-    console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
+    // Create abort controller for timeout
+    const abortController = new AbortController()
+    const timeoutId = setTimeout(() => {
+      console.warn("[Profile] Query taking too long, aborting...")
+      abortController.abort()
+    }, 5000) // 5 second timeout
+
+    let existing, fetchError
+    try {
+      const result = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .abortSignal(abortController.signal)
+        .maybeSingle()
+
+      clearTimeout(timeoutId)
+      existing = result.data
+      fetchError = result.error
+
+      const fetchDuration = Date.now() - fetchStart
+      console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
+    } catch (error: any) {
+      clearTimeout(timeoutId)
+      const fetchDuration = Date.now() - fetchStart
+      console.error(`[Profile] Query failed after ${fetchDuration}ms:`, error)
+
+      // If query times out or fails, return null to trigger fallback
+      return null
+    }
 
     // Log for debugging
     if (fetchError) {
