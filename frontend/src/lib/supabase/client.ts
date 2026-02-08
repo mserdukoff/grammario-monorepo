@@ -53,9 +53,14 @@ export function getSupabaseClient() {
   if (typeof window === "undefined") {
     return null
   }
-  
+
   if (!client) {
     client = createClient()
+    // Log storage info for debugging production issues
+    if (client) {
+      console.log("[Supabase] Client initialized for origin:", window.location.origin)
+      console.log("[Supabase] localStorage available:", typeof window.localStorage !== "undefined")
+    }
   }
   return client
 }
