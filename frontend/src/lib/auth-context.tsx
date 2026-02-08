@@ -302,22 +302,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[Auth] Setting session and user state...")
       setSession(session)
       setUser(session?.user ?? null)
+      
+      // Set loading to false immediately so UI updates
+      console.log("[Auth] Setting loading to false")
+      setLoading(false)
 
       if (session?.user) {
-        console.log("[Auth] Session has user, loading profile...")
-        try {
-          await loadProfile(session.user)
-          console.log("[Auth] Profile loaded successfully")
-        } catch (error) {
-          console.error("[Auth] Error loading profile:", error)
-        }
+        console.log("[Auth] Session has user, starting profile load in background...")
+        // Don't await profile loading - let it run in background
+        loadProfile(session.user).catch((error) => {
+          console.error("[Auth] Error loading profile in background:", error)
+        })
       } else {
         console.log("[Auth] No user in session, clearing profile")
         setProfile(null)
       }
-
-      console.log("[Auth] Setting loading to false")
-      setLoading(false)
     })
 
     // Initialize session on mount
@@ -351,9 +350,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("[Auth] initializeSession: Setting session and user state")
           setSession(session)
           setUser(session.user)
-          console.log("[Auth] initializeSession: Loading profile...")
-          await loadProfile(session.user)
-          console.log("[Auth] initializeSession: Profile loaded")
+          
+          // Don't await profile loading - let it run in background
+          console.log("[Auth] initializeSession: Starting profile load in background...")
+          loadProfile(session.user).catch((error) => {
+            console.error("[Auth] Error loading profile in background:", error)
+          })
         } else {
           console.log("[Auth] initializeSession: No session found")
         }
