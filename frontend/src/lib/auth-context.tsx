@@ -327,10 +327,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    const supabase = getSupabaseClient()
-    if (!supabase) throw new Error("Supabase client not available")
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    try {
+      const supabase = getSupabaseClient()
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
+    } catch (error) {
+      console.error("[Auth] Sign out error:", error)
+      // Continue with local cleanup even if Supabase signOut fails
+    } finally {
+      // Always clear local state, regardless of API call success
+      setUser(null)
+      setProfile(null)
+      setSession(null)
+
+      // Clear localStorage manually as a failsafe
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem("grammario-auth-token")
+          localStorage.removeItem("sb-auth-token")
+        } catch (e) {
+          console.error("[Auth] Failed to clear localStorage:", e)
+        }
+      }
+    }
   }
 
   const resetPassword = async (email: string) => {
