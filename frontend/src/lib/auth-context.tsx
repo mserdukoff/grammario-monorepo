@@ -68,33 +68,39 @@ async function createOrUpdateUserProfile(
     // Check if user exists with timeout to prevent hanging
     console.log("[Profile] Querying users table...")
     const fetchStart = Date.now()
-
-    // Use Promise.race for timeout
-    const queryPromise = supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle()
-
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        console.warn("[Profile] Query timeout after 3s")
-        reject(new Error("Query timeout"))
-      }, 3000) // 3 second timeout
-    })
+    
+    // Use AbortController for proper timeout handling
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      console.warn("[Profile] Query taking too long, aborting...")
+      controller.abort()
+    }, 8000) // 8 second timeout (increased from 3s)
 
     let existing, fetchError
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: any = await Promise.race([queryPromise, timeoutPromise])
+      // Use abortSignal to cancel request if it times out
+      const result = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle()
+        .abortSignal(controller.signal)
+      
+      clearTimeout(timeoutId)
       existing = result.data
       fetchError = result.error
 
       const fetchDuration = Date.now() - fetchStart
       console.log(`[Profile] Query completed in ${fetchDuration}ms - exists:`, !!existing, "error:", fetchError?.message || "none")
     } catch (error: any) {
+      clearTimeout(timeoutId)
       const fetchDuration = Date.now() - fetchStart
-      console.error(`[Profile] Query timed out or failed after ${fetchDuration}ms:`, error.message)
+      
+      if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+        console.error(`[Profile] Query timed out after ${fetchDuration}ms`)
+      } else {
+        console.error(`[Profile] Query failed after ${fetchDuration}ms:`, error.message)
+      }
 
       // If query times out or fails, return null to trigger fallback
       return null
@@ -273,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn("[Auth] Safety timeout reached - forcing loading to false")
         setLoading(false)
       }
-    }, 8000)
+    }, 10000) // Increased to 10s to match query timeout
 
     // Listen for auth changes - this handles:
     // 1. Hash fragment processing (OAuth redirects)

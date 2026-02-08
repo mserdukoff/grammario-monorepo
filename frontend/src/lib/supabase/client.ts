@@ -36,8 +36,8 @@ export function createClient() {
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
       // Detect session in URL hash fragment (for OAuth redirects)
       detectSessionInUrl: true,
-      // Use implicit flow for OAuth (simpler, works well for SPAs)
-      flowType: "implicit",
+      // Use PKCE flow for OAuth (more secure, better for token refresh)
+      flowType: "pkce",
       // Auto-refresh tokens before they expire
       autoRefreshToken: true,
       // Use a unique storage key specific to this app
