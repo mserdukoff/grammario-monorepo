@@ -9,11 +9,33 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/lib/supabase/client"
+
+// Clear storage IMMEDIATELY before any other code runs
+if (typeof window !== "undefined") {
+  // Clear localStorage first
+  try {
+    localStorage.removeItem("grammario-auth-token")
+    localStorage.removeItem("sb-auth-token")
+    Object.keys(localStorage).forEach((key) => {
+      if (key.includes("supabase") || key.includes("sb-")) {
+        localStorage.removeItem(key)
+      }
+    })
+  } catch (e) {
+    console.error("Failed to clear localStorage:", e)
+  }
+
+  // Clear sessionStorage
+  try {
+    sessionStorage.clear()
+  } catch (e) {
+    console.error("Failed to clear sessionStorage:", e)
+  }
+}
 
 export default function AuthResetPage() {
   const router = useRouter()
-  const [status, setStatus] = useState("Initializing...")
+  const [status, setStatus] = useState("Clearing auth state...")
   const [logs, setLogs] = useState<string[]>([])
 
   const addLog = (message: string) => {
@@ -24,26 +46,10 @@ export default function AuthResetPage() {
   useEffect(() => {
     const resetAuth = async () => {
       try {
-        setStatus("Clearing authentication state...")
         addLog("Starting auth reset...")
 
-        // Step 1: Sign out from Supabase
-        addLog("Signing out from Supabase...")
-        const supabase = getSupabaseClient()
-        if (supabase) {
-          try {
-            await supabase.auth.signOut()
-            addLog("✓ Supabase sign out completed")
-          } catch (e) {
-            addLog(`⚠ Supabase sign out error (continuing anyway): ${e}`)
-          }
-        } else {
-          addLog("⚠ No Supabase client found")
-        }
-
-        // Step 2: Clear all localStorage
-        setStatus("Clearing localStorage...")
-        addLog("Clearing all localStorage...")
+        // Step 1: Clear localStorage again (in case anything was added)
+        addLog("Clearing localStorage...")
         const keysToRemove = [
           "grammario-auth-token",
           "sb-auth-token",
@@ -51,50 +57,71 @@ export default function AuthResetPage() {
         ]
 
         keysToRemove.forEach((key) => {
-          if (localStorage.getItem(key)) {
+          try {
             localStorage.removeItem(key)
-            addLog(`✓ Removed localStorage key: ${key}`)
+            addLog(`✓ Removed: ${key}`)
+          } catch (e) {
+            addLog(`⚠ Failed to remove ${key}`)
           }
         })
 
-        // Also clear any other Supabase keys
+        // Clear any other Supabase keys
         const allKeys = Object.keys(localStorage)
         allKeys.forEach((key) => {
           if (key.includes("supabase") || key.includes("sb-")) {
-            localStorage.removeItem(key)
-            addLog(`✓ Removed extra key: ${key}`)
+            try {
+              localStorage.removeItem(key)
+              addLog(`✓ Removed extra key: ${key}`)
+            } catch (e) {
+              console.error("Failed to remove key:", key, e)
+            }
           }
         })
 
-        // Step 3: Clear sessionStorage
+        // Step 2: Clear sessionStorage
         setStatus("Clearing sessionStorage...")
         addLog("Clearing sessionStorage...")
-        sessionStorage.clear()
-        addLog("✓ sessionStorage cleared")
+        try {
+          sessionStorage.clear()
+          addLog("✓ sessionStorage cleared")
+        } catch (e) {
+          addLog("⚠ Failed to clear sessionStorage")
+        }
 
-        // Step 4: Clear cookies (if any)
+        // Step 3: Clear cookies (if any)
         setStatus("Clearing cookies...")
         addLog("Clearing auth cookies...")
-        document.cookie.split(";").forEach((c) => {
-          if (c.includes("supabase") || c.includes("sb-")) {
+        try {
+          document.cookie.split(";").forEach((c) => {
             const name = c.split("=")[0].trim()
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-            addLog(`✓ Cleared cookie: ${name}`)
-          }
-        })
+            if (name.includes("supabase") || name.includes("sb-") || name.includes("auth")) {
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`
+              addLog(`✓ Cleared cookie: ${name}`)
+            }
+          })
+        } catch (e) {
+          addLog("⚠ Failed to clear cookies")
+        }
 
-        // Step 5: Wait a moment
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        // Step 6: Verify everything is clear
+        // Step 4: Verify everything is clear
         setStatus("Verifying cleanup...")
         addLog("Verifying cleanup...")
         const remainingKeys = Object.keys(localStorage).filter(
-          (k) => k.includes("supabase") || k.includes("sb-") || k.includes("grammario")
+          (k) => k.includes("supabase") || k.includes("sb-") || k.includes("grammario") || k.includes("auth")
         )
 
         if (remainingKeys.length > 0) {
           addLog(`⚠ Warning: ${remainingKeys.length} keys remaining: ${remainingKeys.join(", ")}`)
+          // Force remove them
+          remainingKeys.forEach((key) => {
+            try {
+              localStorage.removeItem(key)
+              addLog(`✓ Force removed: ${key}`)
+            } catch (e) {
+              addLog(`✗ Failed to force remove: ${key}`)
+            }
+          })
         } else {
           addLog("✓ All auth data cleared successfully")
         }
@@ -102,10 +129,12 @@ export default function AuthResetPage() {
         setStatus("✓ Reset complete! Redirecting...")
         addLog("✓ Auth reset complete!")
 
-        // Step 7: Redirect to home
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        addLog("Redirecting to home page...")
-        window.location.href = "/"
+        // Step 5: Force reload to home (this bypasses the AuthProvider)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        addLog("Force reloading to home page...")
+
+        // Use location.replace for a hard redirect that clears everything
+        window.location.replace("/")
       } catch (error) {
         setStatus(`Error: ${error}`)
         addLog(`✗ Error during reset: ${error}`)

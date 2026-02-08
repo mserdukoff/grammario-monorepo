@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Reset - Grammario</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 24px;
+      text-align: center;
+      color: #60a5fa;
+    }
+    .status {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 24px;
+      color: #94a3b8;
+    }
+    .progress {
+      width: 100%;
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+    .log {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+    .log-entry {
+      margin: 4px 0;
+      padding: 4px 0;
+    }
+    .success { color: #22c55e; }
+    .warning { color: #eab308; }
+    .error { color: #ef4444; }
+    .info { color: #94a3b8; }
+    .countdown {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Auth Reset</h1>
+    <div class="status" id="status">Initializing...</div>
+    <div class="progress">
+      <div class="progress-bar" id="progress"></div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="countdown" id="countdown"></div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status')
+    const progressEl = document.getElementById('progress')
+    const logEl = document.getElementById('log')
+    const countdownEl = document.getElementById('countdown')
+
+    let progress = 0
+
+    function updateProgress(percent) {
+      progress = percent
+      progressEl.style.width = percent + '%'
+    }
+
+    function addLog(message, type = 'info') {
+      const entry = document.createElement('div')
+      entry.className = `log-entry ${type}`
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`
+      logEl.appendChild(entry)
+      logEl.scrollTop = logEl.scrollHeight
+      console.log(message)
+    }
+
+    async function resetAuth() {
+      try {
+        addLog('🔄 Starting auth reset...', 'info')
+        updateProgress(10)
+
+        // Step 1: Clear localStorage
+        statusEl.textContent = 'Clearing localStorage...'
+        addLog('Clearing localStorage...', 'info')
+
+        const keysToRemove = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.includes('supabase') || key.includes('sb-') || key.includes('grammario') || key.includes('auth'))) {
+            keysToRemove.push(key)
+          }
+        }
+
+        keysToRemove.forEach(key => {
+          try {
+            localStorage.removeItem(key)
+            addLog(`✓ Removed: ${key}`, 'success')
+          } catch (e) {
+            addLog(`✗ Failed to remove: ${key}`, 'error')
+          }
+        })
+
+        if (keysToRemove.length === 0) {
+          addLog('No auth keys found in localStorage', 'info')
+        }
+
+        updateProgress(40)
+
+        // Step 2: Clear sessionStorage
+        statusEl.textContent = 'Clearing sessionStorage...'
+        addLog('Clearing sessionStorage...', 'info')
+        try {
+          sessionStorage.clear()
+          addLog('✓ sessionStorage cleared', 'success')
+        } catch (e) {
+          addLog('✗ Failed to clear sessionStorage: ' + e.message, 'error')
+        }
+
+        updateProgress(60)
+
+        // Step 3: Clear cookies
+        statusEl.textContent = 'Clearing cookies...'
+        addLog('Clearing auth cookies...', 'info')
+        const cookies = document.cookie.split(';')
+        cookies.forEach(cookie => {
+          const name = cookie.split('=')[0].trim()
+          if (name.includes('supabase') || name.includes('sb-') || name.includes('auth')) {
+            // Clear for current path
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+            // Clear for current domain
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`
+            // Clear for parent domain
+            const parts = window.location.hostname.split('.')
+            if (parts.length > 2) {
+              const parentDomain = parts.slice(-2).join('.')
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${parentDomain}`
+            }
+            addLog(`✓ Cleared cookie: ${name}`, 'success')
+          }
+        })
+
+        updateProgress(80)
+
+        // Step 4: Verify cleanup
+        statusEl.textContent = 'Verifying cleanup...'
+        addLog('Verifying cleanup...', 'info')
+
+        const remainingKeys = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.includes('supabase') || key.includes('sb-') || key.includes('grammario') || key.includes('auth'))) {
+            remainingKeys.push(key)
+          }
+        }
+
+        if (remainingKeys.length > 0) {
+          addLog(`⚠ Warning: ${remainingKeys.length} keys remain`, 'warning')
+          remainingKeys.forEach(key => addLog(`  - ${key}`, 'warning'))
+        } else {
+          addLog('✓ All auth data cleared successfully!', 'success')
+        }
+
+        updateProgress(100)
+
+        // Step 5: Redirect
+        statusEl.textContent = '✓ Reset complete!'
+        addLog('✓ Auth reset complete!', 'success')
+        addLog('Redirecting to home page...', 'info')
+
+        // Countdown
+        let seconds = 3
+        countdownEl.textContent = `Redirecting in ${seconds} seconds...`
+
+        const countdown = setInterval(() => {
+          seconds--
+          if (seconds > 0) {
+            countdownEl.textContent = `Redirecting in ${seconds} seconds...`
+          } else {
+            clearInterval(countdown)
+            countdownEl.textContent = 'Redirecting now...'
+            // Force a complete page reload
+            window.location.replace('/')
+          }
+        }, 1000)
+
+      } catch (error) {
+        statusEl.textContent = '✗ Error occurred'
+        addLog('✗ Error: ' + error.message, 'error')
+        countdownEl.textContent = 'Error occurred. Click here to go home manually.'
+        countdownEl.style.cursor = 'pointer'
+        countdownEl.style.color = '#60a5fa'
+        countdownEl.onclick = () => window.location.replace('/')
+      }
+    }
+
+    // Start reset immediately
+    resetAuth()
+  </script>
+</body>
+</html>
