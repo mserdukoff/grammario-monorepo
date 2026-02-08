@@ -53,87 +53,102 @@ async function createOrUpdateUserProfile(
   displayName?: string | null,
   avatarUrl?: string | null
 ): Promise<User | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = getSupabaseClient() as any
-  const today = new Date().toISOString().split("T")[0]
-  
-  // Check if user exists
-  const { data: existing, error: fetchError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", userId)
-    .single()
-  
-  // Log for debugging - can be removed later
-  if (fetchError && fetchError.code !== "PGRST116") {
-    console.error("Error fetching user profile:", fetchError)
-  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = getSupabaseClient() as any
 
-  if (existing && !fetchError) {
-    // Existing user - update streak and last active
-    const existingUser = existing as User
-    let newStreak = existingUser.streak
-    const lastActive = existingUser.last_active_date
-
-    if (lastActive) {
-      const lastDate = new Date(lastActive)
-      const todayDate = new Date(today)
-      const diffDays = Math.floor(
-        (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
-
-      if (diffDays === 1) {
-        // Consecutive day - increment streak
-        newStreak = existingUser.streak + 1
-      } else if (diffDays > 1) {
-        // Streak broken
-        newStreak = 1
-      }
-      // Same day - keep current streak
-    }
-
-    const { data: updated, error } = await supabase
-      .from("users")
-      .update({
-        last_active_date: today,
-        streak: newStreak,
-        longest_streak: Math.max(newStreak, existingUser.longest_streak),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error updating user:", error)
-      return existingUser
-    }
-    return updated as User
-  } else {
-    // New user - create profile
-    const { data: newUser, error } = await supabase
-      .from("users")
-      .insert({
-        id: userId,
-        email,
-        display_name: displayName || email.split("@")[0],
-        avatar_url: avatarUrl,
-        is_pro: false,
-        xp: 0,
-        level: 1,
-        streak: 1,
-        longest_streak: 1,
-        last_active_date: today,
-        total_analyses: 0,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating user:", error)
+    if (!supabase) {
+      console.error("[Profile] Supabase client not available")
       return null
     }
-    return newUser as User
+
+    const today = new Date().toISOString().split("T")[0]
+
+    // Check if user exists
+    const { data: existing, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle() // Use maybeSingle to avoid errors when no rows found
+
+    // Log for debugging
+    if (fetchError) {
+      console.error("[Profile] Error fetching user profile:", fetchError)
+      // Don't throw - we'll try to create the user instead
+    }
+
+    if (existing) {
+      // Existing user - update streak and last active
+      const existingUser = existing as User
+      let newStreak = existingUser.streak || 1
+      const lastActive = existingUser.last_active_date
+
+      if (lastActive) {
+        const lastDate = new Date(lastActive)
+        const todayDate = new Date(today)
+        const diffDays = Math.floor(
+          (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+
+        if (diffDays === 1) {
+          // Consecutive day - increment streak
+          newStreak = existingUser.streak + 1
+        } else if (diffDays > 1) {
+          // Streak broken
+          newStreak = 1
+        }
+        // Same day - keep current streak
+      }
+
+      const { data: updated, error } = await supabase
+        .from("users")
+        .update({
+          last_active_date: today,
+          streak: newStreak,
+          longest_streak: Math.max(newStreak, existingUser.longest_streak || 0),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+        .select()
+        .maybeSingle()
+
+      if (error) {
+        console.error("[Profile] Error updating user:", error)
+        // Return existing data if update fails
+        return existingUser
+      }
+
+      return updated as User
+    } else {
+      // New user - create profile
+      const { data: newUser, error } = await supabase
+        .from("users")
+        .insert({
+          id: userId,
+          email,
+          display_name: displayName || email.split("@")[0],
+          avatar_url: avatarUrl,
+          is_pro: false,
+          xp: 0,
+          level: 1,
+          streak: 1,
+          longest_streak: 1,
+          last_active_date: today,
+          total_analyses: 0,
+        })
+        .select()
+        .maybeSingle()
+
+      if (error) {
+        console.error("[Profile] Error creating user:", error)
+        return null
+      }
+
+      return newUser as User
+    }
+  } catch (error) {
+    console.error("[Profile] Unexpected error in createOrUpdateUserProfile:", error)
+    return null
   }
 }
 
@@ -156,6 +171,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(userProfile)
     } catch (error) {
       console.error("Failed to load profile:", error)
+      // Set a basic profile even if DB fails - don't block the user
+      setProfile({
+        id: authUser.id,
+        email: authUser.email || "",
+        display_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User",
+        avatar_url: authUser.user_metadata?.avatar_url || null,
+        is_pro: false,
+        xp: 0,
+        level: 1,
+        streak: 0,
+        longest_streak: 0,
+        last_active_date: null,
+        total_analyses: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as User)
     } finally {
       setProfileLoading(false)
     }
@@ -165,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log("[Auth] useEffect running...")
     const supabase = getSupabaseClient()
-    
+
     // During SSR or if client not available, just set loading to false
     if (!supabase) {
       console.log("[Auth] No supabase client (SSR), setting loading false")
@@ -173,29 +204,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Check if there's an auth hash in the URL (implicit flow)
-    // If so, let onAuthStateChange handle it - don't call getSession manually
-    const hasAuthHash = typeof window !== "undefined" && 
-      (window.location.hash.includes("access_token") || 
-       window.location.hash.includes("error"))
-    
-    console.log("[Auth] Has auth hash:", hasAuthHash)
+    let mounted = true
+    let sessionInitialized = false
 
     // Safety timeout - never let loading hang forever
     const safetyTimeout = setTimeout(() => {
-      console.warn("[Auth] Safety timeout reached - forcing loading to false")
-      setLoading(false)
+      if (mounted && !sessionInitialized) {
+        console.warn("[Auth] Safety timeout reached - forcing loading to false")
+        setLoading(false)
+      }
     }, 8000)
 
-    // Listen for auth changes FIRST - this handles both:
-    // 1. Hash fragment processing (implicit flow)
+    // Listen for auth changes - this handles:
+    // 1. Hash fragment processing (OAuth redirects)
     // 2. Session changes during app usage
+    // 3. Token refresh events
+    // 4. Sign out events
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
       console.log("[Auth] onAuthStateChange event:", event, "session:", !!session)
+
+      if (!mounted) return
+
       clearTimeout(safetyTimeout)
-      
+      sessionInitialized = true
+
       setSession(session)
       setUser(session?.user ?? null)
 
@@ -208,32 +242,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    // Only call getSession if there's no auth hash
-    // (hash is handled automatically by onAuthStateChange)
-    if (!hasAuthHash) {
-      console.log("[Auth] No auth hash, calling getSession...")
-      supabase.auth.getSession()
-        .then(({ data }: { data: { session: Session | null } }) => {
-          clearTimeout(safetyTimeout)
-          console.log("[Auth] getSession returned:", !!data.session)
-          // Only set if onAuthStateChange hasn't already set it
-          setSession((current) => current ?? data.session)
-          setUser((current) => current ?? data.session?.user ?? null)
-          if (data.session?.user) {
-            loadProfile(data.session.user)
-          }
-          setLoading(false)
-        })
-        .catch((error: Error) => {
-          clearTimeout(safetyTimeout)
+    // Initialize session on mount
+    // This restores the session from localStorage on page refresh
+    const initializeSession = async () => {
+      try {
+        console.log("[Auth] Initializing session...")
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (!mounted) return
+
+        clearTimeout(safetyTimeout)
+        sessionInitialized = true
+
+        if (error) {
           console.error("[Auth] getSession error:", error)
           setLoading(false)
-        })
-    } else {
-      console.log("[Auth] Auth hash detected, waiting for onAuthStateChange...")
+          return
+        }
+
+        console.log("[Auth] Session initialized:", !!session)
+
+        // Only update state if we have a session and haven't already initialized
+        // (onAuthStateChange might have already fired)
+        if (session) {
+          setSession(session)
+          setUser(session.user)
+          await loadProfile(session.user)
+        }
+
+        setLoading(false)
+      } catch (error) {
+        if (mounted) {
+          console.error("[Auth] Session initialization error:", error)
+          clearTimeout(safetyTimeout)
+          setLoading(false)
+        }
+      }
     }
 
+    initializeSession()
+
     return () => {
+      mounted = false
       clearTimeout(safetyTimeout)
       subscription.unsubscribe()
     }

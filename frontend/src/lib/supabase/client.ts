@@ -18,17 +18,34 @@ export function createClient() {
   if (typeof window === "undefined") {
     return null
   }
-  
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  
+
   if (!supabaseUrl || !supabaseKey) {
     console.error("[Supabase] MISSING ENV VARS")
     return null
   }
-  
+
   console.log("[Supabase] Creating client for:", supabaseUrl)
-  return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      // Ensure sessions persist in localStorage
+      persistSession: true,
+      // Use localStorage for session storage (default but explicit is better)
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      // Detect session in URL hash fragment (for OAuth redirects)
+      detectSessionInUrl: true,
+      // Use implicit flow for OAuth (simpler, works well for SPAs)
+      flowType: "implicit",
+      // Auto-refresh tokens before they expire
+      autoRefreshToken: true,
+      // Use a unique storage key specific to this app
+      storageKey: "grammario-auth-token",
+      // Automatically detect session in URL and store it
+      debug: false,
+    },
+  })
 }
 
 export function getSupabaseClient() {

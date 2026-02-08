@@ -22,9 +22,13 @@ export default function AuthCallback() {
   useEffect(() => {
     if (!loading && user) {
       console.log("[Auth Callback] User authenticated, redirecting to /app")
+      // Use replace to avoid back button issues
       router.replace("/app")
+    } else if (!loading && !user && error) {
+      // If we have an error and no user after loading completes, stay on error screen
+      console.log("[Auth Callback] Authentication failed")
     }
-  }, [user, loading, router])
+  }, [user, loading, error, router])
 
   // Handle PKCE flow (code in query params) or check for errors
   useEffect(() => {
