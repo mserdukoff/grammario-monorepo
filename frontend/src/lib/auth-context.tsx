@@ -207,7 +207,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authUser.user_metadata?.avatar_url
       )
       console.log("[Auth] Profile loaded:", !!userProfile)
-      setProfile(userProfile)
+
+      // If profile loading failed (returned null), use fallback
+      if (!userProfile) {
+        console.warn("[Auth] Profile returned null, using fallback profile")
+        setProfile({
+          id: authUser.id,
+          email: authUser.email || "",
+          display_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User",
+          avatar_url: authUser.user_metadata?.avatar_url || null,
+          is_pro: false,
+          xp: 0,
+          level: 1,
+          streak: 0,
+          longest_streak: 0,
+          last_active_date: null,
+          total_analyses: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as User)
+      } else {
+        setProfile(userProfile)
+      }
     } catch (error) {
       console.error("[Auth] Failed to load profile:", error)
       // Set a basic profile even if DB fails - don't block the user
