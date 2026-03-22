@@ -2,107 +2,100 @@
 
 /**
  * OAuth Callback Handler (Client-Side)
- * 
- * Handles the OAuth callback from providers like Google.
- * For implicit flow (hash fragment), the Supabase client auto-processes it.
- * For PKCE flow (code in query), we exchange the code for a session.
+ *
+ * The Supabase client (with detectSessionInUrl: true and flowType: "pkce")
+ * automatically exchanges the authorization code on initialization.
+ * This page only needs to:
+ *   1. Check for OAuth error params in the URL
+ *   2. Wait for the AuthProvider to update user state
+ *   3. Redirect to /app once authenticated
+ *
+ * IMPORTANT: Do NOT manually call exchangeCodeForSession here — the Supabase
+ * client's auto-detection handles it. Calling it twice causes a race condition
+ * where the PKCE code verifier is consumed by the first exchange, and the
+ * second fails.
  */
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/lib/supabase/client"
 import { useAuth } from "@/lib/auth-context"
+
+const STORAGE_KEY = "grammario-auth-token"
 
 export default function AuthCallback() {
   const router = useRouter()
   const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string>("Completing sign in...")
+  const redirected = useRef(false)
 
-  // Redirect once user is authenticated
   useEffect(() => {
+    if (redirected.current) return
     if (!loading && user) {
-      // Use replace to avoid back button issues
+      redirected.current = true
       router.replace("/app")
-    } else if (!loading && !user && error) {
-      // If we have an error and no user after loading completes, stay on error screen
     }
-  }, [user, loading, error, router])
+  }, [user, loading, router])
 
-  // Handle PKCE flow (code in query params) or check for errors
   useEffect(() => {
-    const handleCallback = async () => {
-      // Check for error in hash (OAuth error)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const hashError = hashParams.get("error")
-      const hashErrorDesc = hashParams.get("error_description")
-      
-      if (hashError) {
-        setError(hashErrorDesc || hashError)
-        return
-      }
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const hashError = hashParams.get("error")
+    const hashErrorDesc = hashParams.get("error_description")
 
-      // Check for access_token in hash (implicit flow)
-      // The AuthProvider's onAuthStateChange will handle this automatically
-      if (hashParams.get("access_token")) {
-        setStatus("Processing authentication...")
-        return // AuthProvider will handle it
-      }
-
-      // Check for code in query params (PKCE flow)
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get("code")
-      const errorParam = params.get("error")
-      const errorDesc = params.get("error_description")
-      
-      if (errorParam) {
-        setError(errorDesc || errorParam)
-        return
-      }
-      
-      if (code) {
-        setStatus("Exchanging authorization code...")
-        
-        const supabase = getSupabaseClient()
-        if (!supabase) {
-          setError("Authentication service unavailable")
-          return
-        }
-
-        try {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-          
-          if (exchangeError) {
-            setError(exchangeError.message)
-            return
-          }
-          
-          setStatus("Sign in successful!")
-          // The onAuthStateChange in AuthProvider will update user state
-          // and trigger the redirect via the first useEffect
-        } catch (err) {
-          setError("Authentication failed. Please try again.")
-        }
-        return
-      }
-
-      // No auth data in URL - wait a moment to see if AuthProvider picks up existing session
-      setStatus("Checking authentication...")
-      
-      // Give AuthProvider time to check existing session
-      setTimeout(() => {
-        // If still no user after 3 seconds, show error
-        setError("No authentication data found. Please try signing in again.")
-      }, 3000)
+    if (hashError) {
+      setError(hashErrorDesc || hashError)
+      return
     }
 
-    handleCallback()
+    const params = new URLSearchParams(window.location.search)
+    const errorParam = params.get("error")
+    const errorDesc = params.get("error_description")
+
+    if (errorParam) {
+      setError(errorDesc || errorParam)
+      return
+    }
+
+    const hasCode = params.has("code")
+    const hasToken = hashParams.has("access_token")
+
+    if (hasCode) {
+      const verifier = localStorage.getItem(`${STORAGE_KEY}-code-verifier`)
+      if (!verifier) {
+        setError(
+          "Authentication failed: session data not found. " +
+            "This usually means you were redirected to a different domain " +
+            "than where you started sign-in. Please make sure you're " +
+            "accessing the app from the correct URL and try again."
+        )
+        return
+      }
+      setStatus("Processing authentication...")
+    } else if (hasToken) {
+      setStatus("Processing authentication...")
+    } else {
+      setStatus("Checking authentication...")
+    }
+
+    const timeout = setTimeout(() => {
+      if (!redirected.current) {
+        setError(
+          "Authentication timed out. This can happen if the sign-in " +
+            "link expired or the redirect URL is misconfigured. " +
+            "Please try signing in again."
+        )
+      }
+    }, 10000)
+
+    return () => clearTimeout(timeout)
   }, [])
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center p-8 bg-slate-900 rounded-lg border border-red-500/30 max-w-md">
-          <h1 className="text-xl font-bold text-red-400 mb-2">Authentication Error</h1>
+          <h1 className="text-xl font-bold text-red-400 mb-2">
+            Authentication Error
+          </h1>
           <p className="text-slate-400 mb-4">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
@@ -113,7 +106,6 @@ export default function AuthCallback() {
             </button>
             <button
               onClick={() => {
-                // Clear the error and try signing in fresh
                 window.location.href = "/"
               }}
               className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500 transition"
