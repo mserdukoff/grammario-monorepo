@@ -3,8 +3,9 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sparkles, User, LogOut, Settings, Crown, Flame, Menu, X } from "lucide-react"
+import { Sparkles, User, LogOut, Settings, Crown, Flame, Menu, X, BookOpen, Shield } from "lucide-react"
 import { useAuth, xpProgress, xpForNextLevel } from "@/lib/auth-context"
+import { isAdmin } from "@/lib/admin"
 import { Button } from "./button"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { cn } from "@/lib/utils"
@@ -59,15 +60,39 @@ export function Navbar() {
               Pricing
             </Link>
             {user && (
-              <Link
-                href="/app"
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  isAppPage ? "text-foreground" : "text-foreground/60"
+              <>
+                <Link
+                  href="/app"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80",
+                    pathname === "/app" ? "text-foreground" : "text-foreground/60"
+                  )}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/app/review"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                    pathname === "/app/review" ? "text-foreground" : "text-foreground/60"
+                  )}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Review
+                </Link>
+                {isAdmin(user.id) && (
+                  <Link
+                    href="/admin"
+                    className={cn(
+                      "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                      pathname?.startsWith("/admin") ? "text-red-400" : "text-red-400/60"
+                    )}
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    Admin
+                  </Link>
                 )}
-              >
-                Dashboard
-              </Link>
+              </>
             )}
           </nav>
 
@@ -157,6 +182,16 @@ export function Navbar() {
                             <Settings className="w-4 h-4" />
                             Settings
                           </Link>
+                          {isAdmin(user?.id) && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Shield className="w-4 h-4" />
+                              Admin Console
+                            </Link>
+                          )}
                         </div>
 
                         <div className="border-t border-slate-800 py-1">
@@ -213,13 +248,25 @@ export function Navbar() {
                 Pricing
               </Link>
               {user ? (
-                <Link
-                  href="/app"
-                  className="block px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/app"
+                    className="block px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  {isAdmin(user.id) && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-red-400"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </Link>
+                  )}
+                </>
               ) : (
                 <div className="pt-2 space-y-2">
                   <Button variant="outline" className="w-full" onClick={openLogin}>

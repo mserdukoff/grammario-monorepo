@@ -4,6 +4,21 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: grammario-redis
+    restart: always
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   backend:
     build:
       context: ./backend
@@ -12,6 +27,9 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
       # LLM Configuration
       - OPENROUTER_KEY=${OPENROUTER_KEY}
@@ -25,9 +43,11 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS:-https://grammario.ai,https://www.grammario.ai}
       
       # Stanza model configuration
-      # With 4GB swap on 2GB RAM, can keep all 5 models loaded
       - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-5}
       - PRELOAD_MODELS=${PRELOAD_MODELS:-true}
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
       
       # Production mode
       - DEBUG=false
@@ -93,6 +113,9 @@ services:
       - WATCHTOWER_INCLUDE_STOPPED=false
     profiles:
       - autoupdate  # Only starts with --profile autoupdate
+
+volumes:
+  redis_data:
 
 networks:
   default:

@@ -140,6 +140,8 @@ export async function POST(request: NextRequest) {
         translation: analysisResult.pedagogical_data?.translation || null,
         nodes: analysisResult.nodes,
         pedagogical_data: analysisResult.pedagogical_data || null,
+        difficulty_level: analysisResult.difficulty?.level || null,
+        difficulty_score: analysisResult.difficulty?.score || null,
       })
     }
     

@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from openai import OpenAI
-from app.models.schemas import PedagogicalData, GrammarConcept, GrammarTip
+from app.models.schemas import PedagogicalData, GrammarConcept, GrammarTip, LLMGrammarError
 
 logger = logging.getLogger(__name__)
 
@@ -146,12 +146,23 @@ class LLMService:
                     rule=tip.get("rule"),
                     examples=tip.get("examples")
                 ))
-            
+
+            # Parse grammar errors from LLM
+            llm_errors = []
+            for err in data.get("errors", []):
+                llm_errors.append(LLMGrammarError(
+                    word=err.get("word", ""),
+                    error_type=err.get("error_type", "unknown"),
+                    correction=err.get("correction"),
+                    explanation=err.get("explanation", ""),
+                ))
+
             result = PedagogicalData(
                 translation=data.get("translation", ""),
                 nuance=data.get("nuance"),
                 concepts=concepts,
-                tips=tips if tips else None
+                tips=tips if tips else None,
+                errors=llm_errors if llm_errors else None,
             )
             
             # Cache successful result
@@ -264,6 +275,14 @@ You MUST respond with valid JSON in this exact format:
       "rule": "The underlying grammar rule (optional)",
       "examples": ["additional example 1", "additional example 2"]
     }}
+  ],
+  "errors": [
+    {{
+      "word": "the word containing the error",
+      "error_type": "spelling|agreement|conjugation|case|word_order|preposition|article",
+      "correction": "the corrected form",
+      "explanation": "Brief explanation of why this is wrong and how to fix it"
+    }}
   ]
 }}
 
@@ -271,7 +290,9 @@ IMPORTANT:
 - Include 2-4 grammar concepts
 - Include 2-4 tips that answer "WHY" questions about specific word forms
 - Tips should explain the REASON behind grammatical choices, not just describe them
-- Be specific about which verbs/prepositions require which cases/forms"""
+- Be specific about which verbs/prepositions require which cases/forms
+- If the sentence has NO errors, return an empty "errors" array []
+- Only flag genuine errors, not stylistic preferences"""
 
 
 llm_service = LLMService()

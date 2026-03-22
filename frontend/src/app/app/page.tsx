@@ -48,7 +48,7 @@ import { AchievementToast } from "@/components/gamification/achievement-toast"
 
 import { useAuth } from "@/lib/auth-context"
 import { useAppStore } from "@/store/useAppStore"
-import { analyzeText, type AnalysisResponse } from "@/lib/api"
+import { analyzeText, type AnalysisResponse, type DifficultyInfo, type RuleBasedError } from "@/lib/api"
 import {
   saveAnalysis,
   getRecentAnalyses,
@@ -121,6 +121,8 @@ export default function Dashboard() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [pedagogicalData, setPedagogicalData] = useState<AnalysisResponse["pedagogical_data"] | null>(null)
+  const [difficultyInfo, setDifficultyInfo] = useState<DifficultyInfo | null>(null)
+  const [grammarErrors, setGrammarErrors] = useState<RuleBasedError[]>([])
   const [layoutMode, setLayoutMode] = useState<"linear" | "tree">("linear")
   const [isDraggable, setIsDraggable] = useState(false)
 
@@ -225,6 +227,8 @@ export default function Dashboard() {
     if (!inputText.trim()) return
     setLoading(true)
     setPedagogicalData(null)
+    setDifficultyInfo(null)
+    setGrammarErrors([])
 
     try {
       const response = await analyzeText(inputText, selectedLang)
@@ -232,21 +236,39 @@ export default function Dashboard() {
       if (response.pedagogical_data) {
         setPedagogicalData(response.pedagogical_data)
       }
+      if (response.difficulty) {
+        setDifficultyInfo(response.difficulty)
+      }
+      if (response.grammar_errors) {
+        setGrammarErrors(response.grammar_errors)
+      }
 
-      // Build ReactFlow nodes
-      const rawNodes: Node[] = response.nodes.map((token) => ({
-        id: token.id.toString(),
-        type: "word",
-        position: { x: 0, y: 0 },
-        draggable: isDraggable,
-        data: {
-          text: token.text,
-          lemma: token.lemma,
-          upos: token.upos,
-          feats: token.feats,
-          segments: token.segments,
-        },
-      }))
+      // Build error lookup by word_id for node highlighting
+      const errorByWordId = new Map<number, RuleBasedError>()
+      for (const err of response.grammar_errors || []) {
+        errorByWordId.set(err.word_id, err)
+      }
+
+      // Build ReactFlow nodes with frequency + error data
+      const rawNodes: Node[] = response.nodes.map((token) => {
+        const err = errorByWordId.get(token.id)
+        return {
+          id: token.id.toString(),
+          type: "word",
+          position: { x: 0, y: 0 },
+          draggable: isDraggable,
+          data: {
+            text: token.text,
+            lemma: token.lemma,
+            upos: token.upos,
+            feats: token.feats,
+            segments: token.segments,
+            frequency_band: token.frequency_band,
+            hasError: !!err,
+            errorMessage: err?.message,
+          },
+        }
+      })
 
       const rawEdges: Edge[] = response.nodes
         .filter((token) => token.head_id !== 0)
@@ -337,12 +359,13 @@ export default function Dashboard() {
   const handleSelectFromHistory = (analysis: Analysis) => {
     setInputText(analysis.text)
     setSelectedLang(analysis.language)
-    // Reconstruct visualization
     const nodeData = analysis.nodes as unknown as AnalysisResponse["nodes"]
     const pedData = analysis.pedagogical_data as unknown as AnalysisResponse["pedagogical_data"]
-    
+
     setPedagogicalData(pedData || null)
-    
+    setDifficultyInfo(null)
+    setGrammarErrors([])
+
     const rawNodes: Node[] = nodeData.map((token) => ({
       id: token.id.toString(),
       type: "word",
@@ -354,6 +377,7 @@ export default function Dashboard() {
         upos: token.upos,
         feats: token.feats,
         segments: token.segments,
+        frequency_band: token.frequency_band,
       },
     }))
 
@@ -514,6 +538,56 @@ export default function Dashboard() {
             </Button>
           </div>
 
+          {/* Difficulty Badge */}
+          {difficultyInfo && (
+            <div className="border-t border-border pt-4 animate-accordion-down">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-400">Difficulty Level</span>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "px-2.5 py-1 rounded-md text-sm font-bold border",
+                    difficultyInfo.level === "A1" && "bg-emerald-500/20 border-emerald-500/30 text-emerald-300",
+                    difficultyInfo.level === "A2" && "bg-green-500/20 border-green-500/30 text-green-300",
+                    difficultyInfo.level === "B1" && "bg-yellow-500/20 border-yellow-500/30 text-yellow-300",
+                    difficultyInfo.level === "B2" && "bg-orange-500/20 border-orange-500/30 text-orange-300",
+                    difficultyInfo.level === "C1" && "bg-red-500/20 border-red-500/30 text-red-300",
+                    difficultyInfo.level === "C2" && "bg-purple-500/20 border-purple-500/30 text-purple-300",
+                  )}>
+                    {difficultyInfo.level}
+                  </span>
+                  <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500 rounded-full transition-all"
+                      style={{ width: `${difficultyInfo.score * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Grammar Errors */}
+          {grammarErrors.length > 0 && (
+            <div className="space-y-3 border-t border-border pt-4 animate-accordion-down">
+              <h3 className="font-semibold text-sm flex items-center gap-2 text-red-400">
+                <HelpCircle className="w-4 h-4" />
+                Grammar Issues Detected
+              </h3>
+              {grammarErrors.map((err, i) => (
+                <div key={i} className="rounded-lg border border-red-500/20 bg-red-950/10 p-2.5 text-xs">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-red-300 bg-red-900/30 px-1.5 py-0.5 rounded">
+                      {err.word}
+                    </span>
+                    <span className="text-red-400/70 uppercase text-[10px]">{err.error_type}</span>
+                  </div>
+                  <p className="text-slate-300">{err.message}</p>
+                  {err.rule && <p className="text-slate-500 italic mt-1">{err.rule}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Pedagogical Insights */}
           {pedagogicalData && (
             <div className="space-y-4 border-t border-border pt-6 animate-accordion-down">
@@ -635,6 +709,34 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* LLM-Detected Errors */}
+          {pedagogicalData?.errors && pedagogicalData.errors.length > 0 && (
+            <div className="space-y-3 border-t border-border pt-6 animate-accordion-down">
+              <h3 className="font-semibold text-sm flex items-center gap-2 text-red-400">
+                <Sparkles className="w-4 h-4" />
+                AI-Detected Corrections
+              </h3>
+              {pedagogicalData.errors.map((err, i) => (
+                <div key={i} className="rounded-lg border border-red-500/20 bg-red-950/10 p-3 text-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-mono text-red-300 bg-red-900/30 px-1.5 py-0.5 rounded text-xs line-through">
+                      {err.word}
+                    </span>
+                    {err.correction && (
+                      <>
+                        <ChevronRight className="w-3 h-3 text-slate-500" />
+                        <span className="font-mono text-emerald-300 bg-emerald-900/30 px-1.5 py-0.5 rounded text-xs">
+                          {err.correction}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-slate-300 text-xs">{err.explanation}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>

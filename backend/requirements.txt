@@ -7,9 +7,26 @@ pydantic-settings>=2.1.0
 # NLP - Stanza for linguistic analysis
 stanza>=1.7.0
 
+# NLP - spaCy as faster CPU inference engine
+spacy>=3.7.0
+
+# ML - Sentence embeddings for similarity search
+sentence-transformers>=2.2.0
+
+# ML - Difficulty scoring
+scikit-learn>=1.4.0
+joblib>=1.3.0
+numpy>=1.26.0
+
 # LLM Integration - for pedagogical data generation
 openai>=1.10.0
 httpx>=0.26.0
+
+# Caching
+redis>=5.0.0
+
+# Observability
+psutil>=5.9.0
 
 # Environment
 python-dotenv>=1.0.0
