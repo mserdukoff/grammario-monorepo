@@ -7,11 +7,9 @@ import remarkGfm from "remark-gfm"
 import { ArrowLeft, Zap, Database, Brain, BarChart3, BookOpen, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
-const proseClasses = "prose prose-invert prose-slate max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h1:mb-4 prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-800 prose-h3:text-xl prose-h3:mt-8 prose-h4:text-lg prose-p:text-slate-300 prose-p:leading-relaxed prose-li:text-slate-300 prose-strong:text-white prose-code:text-indigo-400 prose-code:bg-slate-800/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-table:border-collapse prose-th:border prose-th:border-slate-700 prose-th:bg-slate-800/50 prose-th:px-4 prose-th:py-2 prose-td:border prose-td:border-slate-800 prose-td:px-4 prose-td:py-2 prose-hr:border-slate-800 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:text-indigo-300"
-
 function Md({ children }: { children: string }) {
   return (
-    <div className={proseClasses}>
+    <div className="prose prose-invert max-w-none prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-4 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-800 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-300 prose-p:leading-7 prose-p:my-3 prose-li:text-slate-300 prose-li:my-1 prose-strong:text-white prose-strong:font-semibold prose-code:text-indigo-400 prose-code:bg-slate-800/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-lg prose-pre:my-4 prose-table:my-6 prose-th:border prose-th:border-slate-700 prose-th:bg-slate-800/60 prose-th:px-4 prose-th:py-2.5 prose-th:text-left prose-th:text-sm prose-th:font-semibold prose-th:text-slate-200 prose-td:border prose-td:border-slate-800 prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:text-slate-300 prose-hr:border-slate-800 prose-hr:my-8 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:text-indigo-300 prose-ol:my-4 prose-ul:my-4 prose-blockquote:border-indigo-500 prose-blockquote:text-slate-400">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   )
