@@ -50,8 +50,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy Stanza models
 COPY --from=builder /app/stanza_resources /home/appuser/stanza_resources
 
-# Copy sentence-transformers cache
-COPY --from=builder /root/.cache/torch /home/appuser/.cache/torch
+# Copy sentence-transformers / huggingface cache (CPU-only torch has no torch cache dir)
 COPY --from=builder /root/.cache/huggingface /home/appuser/.cache/huggingface
 
 # Copy application code
@@ -61,7 +60,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     STANZA_RESOURCES_DIR=/home/appuser/stanza_resources \
     TRANSFORMERS_CACHE=/home/appuser/.cache/huggingface \
-    TORCH_HOME=/home/appuser/.cache/torch
+    HF_HOME=/home/appuser/.cache/huggingface
 
 USER appuser
 
