@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sparkles, User, LogOut, Settings, Crown, Flame, Menu, X, BookOpen, Shield } from "lucide-react"
+import { Sparkles, User, LogOut, Settings, Crown, Flame, Menu, X, BookOpen, Shield, FileText } from "lucide-react"
 import { useAuth, xpProgress, xpForNextLevel } from "@/lib/auth-context"
 import { isAdmin } from "@/lib/admin"
 import { Button } from "./button"
@@ -81,16 +81,28 @@ export function Navbar() {
                   Review
                 </Link>
                 {isAdmin(user.id) && (
-                  <Link
-                    href="/admin"
-                    className={cn(
-                      "transition-colors hover:text-foreground/80 flex items-center gap-1",
-                      pathname?.startsWith("/admin") ? "text-red-400" : "text-red-400/60"
-                    )}
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    Admin
-                  </Link>
+                  <>
+                    <Link
+                      href="/patch-notes"
+                      className={cn(
+                        "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                        pathname === "/patch-notes" ? "text-amber-400" : "text-amber-400/60"
+                      )}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Patch Notes
+                    </Link>
+                    <Link
+                      href="/admin"
+                      className={cn(
+                        "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                        pathname?.startsWith("/admin") ? "text-red-400" : "text-red-400/60"
+                      )}
+                    >
+                      <Shield className="w-3.5 h-3.5" />
+                      Admin
+                    </Link>
+                  </>
                 )}
               </>
             )}
@@ -183,14 +195,24 @@ export function Navbar() {
                             Settings
                           </Link>
                           {isAdmin(user?.id) && (
-                            <Link
-                              href="/admin"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <Shield className="w-4 h-4" />
-                              Admin Console
-                            </Link>
+                            <>
+                              <Link
+                                href="/patch-notes"
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-amber-400 hover:bg-slate-800 transition-colors"
+                                onClick={() => setShowUserMenu(false)}
+                              >
+                                <FileText className="w-4 h-4" />
+                                Patch Notes
+                              </Link>
+                              <Link
+                                href="/admin"
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors"
+                                onClick={() => setShowUserMenu(false)}
+                              >
+                                <Shield className="w-4 h-4" />
+                                Admin Console
+                              </Link>
+                            </>
                           )}
                         </div>
 
@@ -257,14 +279,24 @@ export function Navbar() {
                     Dashboard
                   </Link>
                   {isAdmin(user.id) && (
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-red-400"
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      <Shield className="w-4 h-4" />
-                      Admin
-                    </Link>
+                    <>
+                      <Link
+                        href="/patch-notes"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-amber-400"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        <FileText className="w-4 h-4" />
+                        Patch Notes
+                      </Link>
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-red-400"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin
+                      </Link>
+                    </>
                   )}
                 </>
               ) : (
