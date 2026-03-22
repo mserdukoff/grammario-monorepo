@@ -14,6 +14,9 @@ export interface AnalysisResponse {
   }
   nodes: TokenNode[]
   pedagogical_data?: PedagogicalData
+  difficulty?: DifficultyInfo
+  grammar_errors?: RuleBasedError[]
+  embedding?: number[]
 }
 
 export interface TokenNode {
@@ -27,6 +30,7 @@ export interface TokenNode {
   deprel: string
   misc?: string
   segments?: string[]
+  frequency_band?: number
 }
 
 export interface GrammarConcept {
@@ -43,11 +47,35 @@ export interface GrammarTip {
   examples?: string[]
 }
 
+export interface LLMGrammarError {
+  word: string
+  error_type: string
+  correction?: string
+  explanation: string
+}
+
 export interface PedagogicalData {
   translation: string
   nuance?: string
   concepts: GrammarConcept[]
   tips?: GrammarTip[]
+  errors?: LLMGrammarError[]
+}
+
+export interface DifficultyInfo {
+  level: string
+  score: number
+  features?: Record<string, number>
+}
+
+export interface RuleBasedError {
+  word: string
+  word_id: number
+  error_type: string
+  severity: string
+  message: string
+  correction?: string
+  rule?: string
 }
 
 export interface UsageStats {

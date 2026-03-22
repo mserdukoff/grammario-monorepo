@@ -84,6 +84,9 @@ export interface Database {
           translation: string | null
           nodes: Json
           pedagogical_data: Json | null
+          difficulty_level: string | null
+          difficulty_score: number | null
+          embedding: number[] | null
           is_favorite: boolean
           notes: string | null
           created_at: string
@@ -96,6 +99,8 @@ export interface Database {
           translation?: string | null
           nodes: Json
           pedagogical_data?: Json | null
+          difficulty_level?: string | null
+          difficulty_score?: number | null
           is_favorite?: boolean
           notes?: string | null
           created_at?: string
@@ -108,6 +113,8 @@ export interface Database {
           translation?: string | null
           nodes?: Json
           pedagogical_data?: Json | null
+          difficulty_level?: string | null
+          difficulty_score?: number | null
           is_favorite?: boolean
           notes?: string | null
           created_at?: string

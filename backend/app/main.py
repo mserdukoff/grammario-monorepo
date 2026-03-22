@@ -28,17 +28,42 @@ async def lifespan(app: FastAPI):
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
     
-    # Pre-load Stanza models if PRELOAD_MODELS is set
+    # Pre-load NLP models at startup
     if os.environ.get("PRELOAD_MODELS", "false").lower() == "true":
+        preferred_engine = os.environ.get("PREFERRED_ENGINE", "spacy")
+
+        if preferred_engine == "spacy":
+            logger.info("Pre-loading spaCy models at startup...")
+            from app.services.spacy_manager import spacy_manager
+            if spacy_manager.available:
+                for lang in spacy_manager.SUPPORTED_LANGUAGES:
+                    try:
+                        logger.info(f"Loading spaCy model: {lang}")
+                        spacy_manager.get_pipeline(lang)
+                    except Exception as e:
+                        logger.error(f"Failed to pre-load spaCy {lang}: {e}")
+                logger.info(f"spaCy models loaded: {spacy_manager.get_loaded_models()}")
+
         logger.info("Pre-loading Stanza models at startup...")
         from app.services.stanza_manager import stanza_manager
-        for lang in stanza_manager.SUPPORTED_LANGUAGES:
+        # Always load Turkish with Stanza (no spaCy support)
+        stanza_langs = stanza_manager.SUPPORTED_LANGUAGES if preferred_engine != "spacy" else ["tr"]
+        for lang in stanza_langs:
             try:
-                logger.info(f"Loading model: {lang}")
+                logger.info(f"Loading Stanza model: {lang}")
                 stanza_manager.get_pipeline(lang)
             except Exception as e:
-                logger.error(f"Failed to pre-load {lang}: {e}")
-        logger.info(f"Models loaded: {stanza_manager.get_loaded_models()}")
+                logger.error(f"Failed to pre-load Stanza {lang}: {e}")
+        logger.info(f"Stanza models loaded: {stanza_manager.get_loaded_models()}")
+
+        # Pre-load embedding model
+        logger.info("Pre-loading embedding model...")
+        try:
+            from app.services.embeddings import embedding_service
+            embedding_service.encode("warmup")
+            logger.info("Embedding model loaded successfully")
+        except Exception as e:
+            logger.warning(f"Failed to pre-load embedding model: {e}")
     
     yield
     # Shutdown
@@ -95,19 +120,49 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check endpoint."""
+    """Detailed health check with model status, cache metrics, and engine info."""
     from app.services.stanza_manager import stanza_manager
+    from app.services.spacy_manager import spacy_manager
+    from app.services.cache import cache_service
+    from app.services.embeddings import embedding_service
+    from app.services.frequency import frequency_service
+    import psutil
+    import os
+
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+
     return {
         "status": "healthy",
         "version": settings.APP_VERSION,
         "services": {
             "llm": bool(settings.OPENROUTER_KEY or settings.OPENAI_API_KEY),
+            "cache": cache_service.stats,
+            "embeddings": embedding_service.available,
         },
-        "models": {
-            "loaded": stanza_manager.get_loaded_models(),
-            "max_loaded": stanza_manager.MAX_LOADED_MODELS,
-            "supported": stanza_manager.SUPPORTED_LANGUAGES,
-        }
+        "engines": {
+            "preferred": os.getenv("PREFERRED_ENGINE", "spacy"),
+            "spacy": {
+                "available": spacy_manager.available,
+                "loaded": spacy_manager.get_loaded_models() if spacy_manager.available else [],
+                "supported": spacy_manager.SUPPORTED_LANGUAGES if spacy_manager.available else [],
+            },
+            "stanza": {
+                "loaded": stanza_manager.get_loaded_models(),
+                "max_loaded": stanza_manager.MAX_LOADED_MODELS,
+                "supported": stanza_manager.SUPPORTED_LANGUAGES,
+            },
+        },
+        "features": {
+            "difficulty_scoring": True,
+            "frequency_analysis": frequency_service.supported_languages,
+            "error_detection": True,
+            "sentence_embeddings": embedding_service.available,
+        },
+        "memory": {
+            "rss_mb": round(mem_info.rss / 1024 / 1024, 1),
+            "vms_mb": round(mem_info.vms / 1024 / 1024, 1),
+        },
     }
 
 

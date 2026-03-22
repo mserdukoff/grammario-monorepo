@@ -38,6 +38,8 @@ export async function saveAnalysis(
       translation: analysis.pedagogical_data?.translation || null,
       nodes: analysis.nodes as unknown as Record<string, unknown>,
       pedagogical_data: analysis.pedagogical_data as unknown as Record<string, unknown> || null,
+      difficulty_level: analysis.difficulty?.level || null,
+      difficulty_score: analysis.difficulty?.score || null,
       is_favorite: false,
     })
     .select("id")

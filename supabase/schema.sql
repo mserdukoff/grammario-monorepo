@@ -10,6 +10,7 @@
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "vector";  -- pgvector for embedding similarity search
 
 -- =============================================================================
 -- USERS TABLE
@@ -64,6 +65,11 @@ CREATE TABLE IF NOT EXISTS public.analyses (
     nodes JSONB NOT NULL,
     pedagogical_data JSONB,
     
+    -- ML-enriched fields
+    difficulty_level TEXT CHECK (difficulty_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
+    difficulty_score REAL,
+    embedding vector(384),  -- sentence embedding for similarity search
+    
     -- Metadata
     is_favorite BOOLEAN DEFAULT FALSE,
     notes TEXT,
@@ -75,6 +81,8 @@ CREATE TABLE IF NOT EXISTS public.analyses (
 CREATE INDEX IF NOT EXISTS idx_analyses_user_date ON public.analyses(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_analyses_user_language ON public.analyses(user_id, language);
 CREATE INDEX IF NOT EXISTS idx_analyses_user_favorite ON public.analyses(user_id, is_favorite) WHERE is_favorite = TRUE;
+CREATE INDEX IF NOT EXISTS idx_analyses_embedding ON public.analyses USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_analyses_difficulty ON public.analyses(user_id, difficulty_level);
 
 -- =============================================================================
 -- VOCABULARY TABLE
@@ -223,6 +231,46 @@ CREATE POLICY "Users can insert own achievements" ON public.user_achievements
 ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Achievements are viewable by all" ON public.achievements
     FOR SELECT USING (true);
+
+-- =============================================================================
+-- SIMILARITY SEARCH FUNCTION (pgvector)
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION public.match_analyses(
+    query_embedding vector(384),
+    match_user_id UUID,
+    match_language TEXT DEFAULT NULL,
+    match_count INT DEFAULT 5,
+    match_threshold FLOAT DEFAULT 0.5
+)
+RETURNS TABLE (
+    id UUID,
+    text TEXT,
+    language TEXT,
+    translation TEXT,
+    difficulty_level TEXT,
+    similarity FLOAT,
+    created_at TIMESTAMPTZ
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        a.id,
+        a.text,
+        a.language,
+        a.translation,
+        a.difficulty_level,
+        1 - (a.embedding <=> query_embedding) AS similarity,
+        a.created_at
+    FROM public.analyses a
+    WHERE a.user_id = match_user_id
+      AND a.embedding IS NOT NULL
+      AND (match_language IS NULL OR a.language = match_language)
+      AND 1 - (a.embedding <=> query_embedding) > match_threshold
+    ORDER BY a.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$ LANGUAGE plpgsql;
 
 -- =============================================================================
 -- FUNCTIONS & TRIGGERS
