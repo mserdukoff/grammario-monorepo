@@ -5,7 +5,7 @@
  * Saves analysis results to Supabase for authenticated users.
  */
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedClient } from "@/lib/supabase/api"
 
 // Rate limits
 const FREE_LIMIT = 100  // Generous for beta
@@ -16,7 +16,7 @@ const MAX_TEXT_LENGTH = 1000
 const NLP_BACKEND_URL = process.env.API_URL || "http://127.0.0.1:8000"
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  const { supabase, user } = await getAuthenticatedClient(request)
   
   // Parse request body
   let body: { text?: string; language?: string }
@@ -54,9 +54,6 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   }
-  
-  // Get current user (optional - allows anonymous usage)
-  const { data: { user } } = await supabase.auth.getUser()
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any

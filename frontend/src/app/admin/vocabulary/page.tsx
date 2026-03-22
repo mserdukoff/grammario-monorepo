@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { authFetch } from "@/lib/auth-fetch"
 
 const LANG_FLAGS: Record<string, string> = { it: "\u{1F1EE}\u{1F1F9}", es: "\u{1F1EA}\u{1F1F8}", de: "\u{1F1E9}\u{1F1EA}", ru: "\u{1F1F7}\u{1F1FA}", tr: "\u{1F1F9}\u{1F1F7}" }
 
@@ -20,7 +21,7 @@ export default function AdminVocabulary() {
 
   const load = useCallback(async (p: number) => {
     try {
-      const res = await fetch(`/api/v1/admin/vocabulary?page=${p}&limit=30`)
+      const res = await authFetch(`/api/v1/admin/vocabulary?page=${p}&limit=30`)
       if (res.ok) {
         const data = await res.json()
         setItems(data.items)

@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import { ADMIN_USER_ID } from "@/lib/admin"
 import { cn } from "@/lib/utils"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface UserRow {
   id: string; email: string; display_name: string | null; avatar_url: string | null
@@ -26,7 +27,7 @@ export default function AdminUsers() {
 
   const load = useCallback(async (p: number) => {
     try {
-      const res = await fetch(`/api/v1/admin/users?page=${p}&limit=30`)
+      const res = await authFetch(`/api/v1/admin/users?page=${p}&limit=30`)
       if (res.ok) {
         const data = await res.json()
         setUsers(data.users)
@@ -55,7 +56,7 @@ export default function AdminUsers() {
   const saveEdit = async () => {
     if (!editing) return
     try {
-      const res = await fetch("/api/v1/admin/users", {
+      const res = await authFetch("/api/v1/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: editing, updates: editValues }),
@@ -69,7 +70,7 @@ export default function AdminUsers() {
 
   const confirmDelete = async (userId: string) => {
     try {
-      const res = await fetch("/api/v1/admin/users", {
+      const res = await authFetch("/api/v1/admin/users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),

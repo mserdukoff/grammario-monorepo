@@ -1,13 +1,11 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthenticatedClient } from "@/lib/supabase/api"
 import { ADMIN_USER_ID } from "@/lib/admin"
 
 const NLP_BACKEND_URL = process.env.API_URL || "http://127.0.0.1:8000"
 
-export async function GET() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+export async function GET(request: NextRequest) {
+  const { user } = await getAuthenticatedClient(request)
   if (!user || user.id !== ADMIN_USER_ID) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }

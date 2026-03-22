@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthenticatedClient } from "@/lib/supabase/api"
 import { ADMIN_USER_ID } from "@/lib/admin"
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
+  const { supabase, user } = await getAuthenticatedClient(request)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
-  const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.id !== ADMIN_USER_ID) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }

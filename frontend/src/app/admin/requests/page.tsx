@@ -7,6 +7,7 @@ import {
   Copy, Check, Trash2, X, ExternalLink,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { authFetch } from "@/lib/auth-fetch"
 
 const LANG_FLAGS: Record<string, string> = { it: "\u{1F1EE}\u{1F1F9}", es: "\u{1F1EA}\u{1F1F8}", de: "\u{1F1E9}\u{1F1EA}", ru: "\u{1F1F7}\u{1F1FA}", tr: "\u{1F1F9}\u{1F1F7}" }
 
@@ -34,7 +35,7 @@ export default function AdminRequests() {
     try {
       let url = `/api/v1/admin/analyses?page=${p}&limit=20`
       if (lang) url += `&language=${lang}`
-      const res = await fetch(url)
+      const res = await authFetch(url)
       if (res.ok) {
         const data = await res.json()
         setAnalyses(data.analyses)
@@ -45,7 +46,7 @@ export default function AdminRequests() {
 
   const loadDetail = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/v1/admin/analyses?id=${id}`)
+      const res = await authFetch(`/api/v1/admin/analyses?id=${id}`)
       if (res.ok) {
         const data = await res.json()
         setDetail(data)
@@ -73,7 +74,7 @@ export default function AdminRequests() {
 
   const deleteAnalysis = async (id: string) => {
     try {
-      const res = await fetch("/api/v1/admin/analyses", {
+      const res = await authFetch("/api/v1/admin/analyses", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ analysis_id: id }),

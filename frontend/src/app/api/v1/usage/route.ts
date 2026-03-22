@@ -4,19 +4,16 @@
  * Returns usage statistics for the current user.
  * Uses Supabase to track daily analyses count.
  */
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthenticatedClient } from "@/lib/supabase/api"
 
 // Rate limits
 const FREE_LIMIT = 100  // Generous for beta
 const PRO_LIMIT = 1000
 const WINDOW_SECONDS = 86400  // 24 hours
 
-export async function GET() {
-  const supabase = await createClient()
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
+export async function GET(request: NextRequest) {
+  const { supabase, user } = await getAuthenticatedClient(request)
   
   if (!user) {
     // Anonymous user

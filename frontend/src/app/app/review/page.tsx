@@ -22,6 +22,7 @@ import { Navbar } from "@/components/ui/navbar"
 import { useAuth } from "@/lib/auth-context"
 import { qualityLabel, qualityColor } from "@/lib/sm2"
 import { cn } from "@/lib/utils"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface VocabWord {
   id: string
@@ -68,7 +69,7 @@ export default function ReviewPage() {
     if (!user) return
     setLoading(true)
     try {
-      const res = await fetch("/api/v1/vocabulary/review")
+      const res = await authFetch("/api/v1/vocabulary/review")
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
       setWords(data.words || [])
@@ -95,7 +96,7 @@ export default function ReviewPage() {
     setSubmitting(true)
 
     try {
-      const res = await fetch("/api/v1/vocabulary/review", {
+      const res = await authFetch("/api/v1/vocabulary/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vocab_id: currentWord.id, quality }),
