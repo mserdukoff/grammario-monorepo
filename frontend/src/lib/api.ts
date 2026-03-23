@@ -30,7 +30,6 @@ export interface TokenNode {
   deprel: string
   misc?: string
   segments?: string[]
-  frequency_band?: number
 }
 
 export interface GrammarConcept {

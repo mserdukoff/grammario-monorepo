@@ -6,13 +6,13 @@ linguistic features extracted from the parse tree. Uses a rule-based heuristic
 mapping that can be swapped for a trained sklearn model.
 
 Features:
-  - Lexical: avg word length, type-token ratio, proportion of rare words
+  - Lexical: avg word length, type-token ratio, lexical density
   - Syntactic: sentence length, dependency tree depth/width, subordinate clause count
   - Morphological: avg features per token, unique POS tags
 """
 import math
 import logging
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 from dataclasses import dataclass
 
 from app.models.schemas import TokenNode
@@ -38,7 +38,6 @@ class LinguisticFeatures:
     subordinate_clause_count: int
     avg_morphological_complexity: float
     unique_pos_count: int
-    rare_word_proportion: float
     lexical_density: float
 
     def to_dict(self) -> dict:
@@ -51,7 +50,6 @@ class LinguisticFeatures:
             "subordinate_clause_count": self.subordinate_clause_count,
             "avg_morphological_complexity": round(self.avg_morphological_complexity, 2),
             "unique_pos_count": self.unique_pos_count,
-            "rare_word_proportion": round(self.rare_word_proportion, 2),
             "lexical_density": round(self.lexical_density, 2),
         }
 
@@ -64,10 +62,9 @@ class DifficultyScorer:
     def extract_features(
         self,
         nodes: List[TokenNode],
-        frequency_bands: Optional[Dict[int, int]] = None,
     ) -> LinguisticFeatures:
         if not nodes:
-            return LinguisticFeatures(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            return LinguisticFeatures(0, 0, 0, 0, 0, 0, 0, 0)
 
         texts = [n.text for n in nodes]
         lemmas = [n.lemma.lower() for n in nodes if n.lemma]
@@ -101,12 +98,6 @@ class DifficultyScorer:
 
         unique_pos = len({n.upos for n in nodes if n.upos})
 
-        # Rare word proportion (from frequency bands if available)
-        rare_proportion = 0.0
-        if frequency_bands:
-            rare_count = sum(1 for nid, band in frequency_bands.items() if band >= 4)
-            rare_proportion = rare_count / sentence_length if sentence_length > 0 else 0
-
         # Lexical density: content words / total words
         content_count = sum(1 for n in nodes if n.upos in self.CONTENT_POS)
         lexical_density = content_count / sentence_length if sentence_length > 0 else 0
@@ -120,7 +111,6 @@ class DifficultyScorer:
             subordinate_clause_count=sub_count,
             avg_morphological_complexity=avg_morph,
             unique_pos_count=unique_pos,
-            rare_word_proportion=rare_proportion,
             lexical_density=lexical_density,
         )
 
@@ -156,7 +146,6 @@ class DifficultyScorer:
     def score(
         self,
         nodes: List[TokenNode],
-        frequency_bands: Optional[Dict[int, int]] = None,
     ) -> Tuple[str, float, LinguisticFeatures]:
         """
         Score sentence difficulty.
@@ -164,7 +153,7 @@ class DifficultyScorer:
         Returns:
             (cefr_level, raw_score_0_to_1, features)
         """
-        features = self.extract_features(nodes, frequency_bands)
+        features = self.extract_features(nodes)
         raw_score = self._heuristic_score(features)
         cefr = self._score_to_cefr(raw_score)
 
@@ -191,7 +180,7 @@ class DifficultyScorer:
         # Average word length: short words = easy
         wl_score = min((f.avg_word_length - 2) / 8.0, 1.0)
         wl_score = max(wl_score, 0.0)
-        components.append(("word_length", wl_score, 0.10))
+        components.append(("word_length", wl_score, 0.15))
 
         # Tree depth: deeper = more embedded clauses
         depth_score = min((f.tree_depth - 1) / 6.0, 1.0)
@@ -210,13 +199,9 @@ class DifficultyScorer:
         ttr_score = f.type_token_ratio
         components.append(("ttr", ttr_score, 0.10))
 
-        # Rare words
-        rare_score = min(f.rare_word_proportion / 0.5, 1.0)
-        components.append(("rare_words", rare_score, 0.10))
-
         # Lexical density
         ld_score = f.lexical_density
-        components.append(("lexical_density", ld_score, 0.05))
+        components.append(("lexical_density", ld_score, 0.10))
 
         total = sum(score * weight for _, score, weight in components)
         return min(max(total, 0.0), 1.0)
