@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { Navbar } from "@/components/ui/navbar"
+import { AppNavbar } from "@/components/ui/app-navbar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { useAppStore } from "@/store/useAppStore"
@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-foreground">
-      <Navbar />
+      <AppNavbar />
 
       <main className="flex-1 container max-w-2xl py-8">
         {/* Header */}

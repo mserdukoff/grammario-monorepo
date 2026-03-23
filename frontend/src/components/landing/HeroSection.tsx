@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Download } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingDemo } from "@/components/LandingDemo"
 
@@ -25,8 +25,8 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             <Link href="/app">
               <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-white text-slate-950 hover:bg-slate-200 transition-all hover:scale-105">
-                <Download className="mr-2 h-5 w-5" />
-                Start Analyzing
+                <ArrowRight className="mr-2 h-5 w-5" />
+                Go to App
               </Button>
             </Link>
             <Link href="#features">

@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Navbar } from "@/components/ui/navbar"
+import { AppNavbar } from "@/components/ui/app-navbar"
 import { useAuth } from "@/lib/auth-context"
 import { qualityLabel, qualityColor } from "@/lib/sm2"
 import { cn } from "@/lib/utils"
@@ -134,7 +134,7 @@ export default function ReviewPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen flex-col bg-slate-950 text-foreground">
-        <Navbar />
+        <AppNavbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
             <BookOpen className="w-12 h-12 text-slate-500 mx-auto" />
@@ -148,7 +148,7 @@ export default function ReviewPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-foreground relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none opacity-20" />
-      <Navbar />
+      <AppNavbar />
 
       <main className="flex-1 flex flex-col items-center justify-start pt-8 px-4 relative z-10">
         {/* Header */}
@@ -159,7 +159,7 @@ export default function ReviewPage() {
               className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm">Back to Dashboard</span>
+              <span className="text-sm">Back to App</span>
             </button>
             <h1 className="text-xl font-bold flex items-center gap-2">
               <Brain className="w-5 h-5 text-indigo-500" />
@@ -232,7 +232,7 @@ export default function ReviewPage() {
                   Review Again
                 </Button>
                 <Button
-                  onClick={() => router.push("/app")}
+                  onClick={() => router.push("/app/analyze")}
                   className="flex-1"
                 >
                   <ChevronRight className="w-4 h-4 mr-2" />

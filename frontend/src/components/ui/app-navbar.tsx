@@ -3,14 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sparkles, LogOut, Settings, Crown, Flame, Menu, X, Shield, FileText } from "lucide-react"
+import { Sparkles, User, LogOut, Settings, Crown, Flame, Menu, X, BookOpen, Shield, FileText, Search } from "lucide-react"
 import { useAuth, xpProgress } from "@/lib/auth-context"
 import { isAdmin } from "@/lib/admin"
 import { Button } from "./button"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { cn } from "@/lib/utils"
 
-export function Navbar() {
+export function AppNavbar() {
   const pathname = usePathname()
   const { user, profile, loading, signOut } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -37,63 +37,76 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 max-w-screen-2xl items-center">
-          {/* Logo */}
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Link href="/app" className="mr-6 flex items-center space-x-2">
             <Sparkles className="h-6 w-6 text-indigo-500" />
             <span className="hidden font-bold sm:inline-block">Grammario</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex flex-1 items-center space-x-6 text-sm font-medium">
             <Link
-              href="/#features"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
+              href="/app"
+              className={cn(
+                "transition-colors hover:text-foreground/80",
+                pathname === "/app" ? "text-foreground" : "text-foreground/60"
+              )}
             >
-              Features
-            </Link>
-            <Link
-              href="/#pricing"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Pricing
+              Home
             </Link>
             {user && (
               <>
-                {isAdmin(user.id) && (
-                  <>
-                    <Link
-                      href="/patch-notes"
-                      className={cn(
-                        "transition-colors hover:text-foreground/80 flex items-center gap-1",
-                        pathname === "/patch-notes" ? "text-amber-400" : "text-amber-400/60"
-                      )}
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      Patch Notes
-                    </Link>
-                    <Link
-                      href="/admin"
-                      className={cn(
-                        "transition-colors hover:text-foreground/80 flex items-center gap-1",
-                        pathname?.startsWith("/admin") ? "text-red-400" : "text-red-400/60"
-                      )}
-                    >
-                      <Shield className="w-3.5 h-3.5" />
-                      Admin
-                    </Link>
-                  </>
-                )}
+                <Link
+                  href="/app/analyze"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                    pathname === "/app/analyze" ? "text-foreground" : "text-foreground/60"
+                  )}
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  Analyze
+                </Link>
+                <Link
+                  href="/app/review"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                    pathname === "/app/review" ? "text-foreground" : "text-foreground/60"
+                  )}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Review
+                </Link>
+              </>
+            )}
+            {user && isAdmin(user.id) && (
+              <>
+                <Link
+                  href="/patch-notes"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                    pathname === "/patch-notes" ? "text-amber-400" : "text-amber-400/60"
+                  )}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Patch Notes
+                </Link>
+                <Link
+                  href="/admin"
+                  className={cn(
+                    "transition-colors hover:text-foreground/80 flex items-center gap-1",
+                    pathname?.startsWith("/admin") ? "text-red-400" : "text-red-400/60"
+                  )}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin
+                </Link>
               </>
             )}
           </nav>
 
-          {/* Right side */}
           <div className="flex items-center space-x-4">
             {loading ? (
               <div className="h-8 w-8 rounded-full bg-slate-800 animate-pulse" />
             ) : user && profile ? (
               <div className="flex items-center gap-3">
-                {/* Streak indicator */}
                 {profile.streak > 0 && (
                   <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
                     <Flame className="w-4 h-4 text-orange-500" />
@@ -101,7 +114,6 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* XP / Level */}
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="flex flex-col items-end">
                     <span className="text-xs text-muted-foreground">Level {profile.level}</span>
@@ -114,7 +126,6 @@ export function Navbar() {
                   </div>
                 </div>
 
-                {/* Pro badge */}
                 {profile.is_pro && (
                   <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
                     <Crown className="w-3 h-3 text-amber-500" />
@@ -122,7 +133,6 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* User menu */}
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
@@ -143,7 +153,6 @@ export function Navbar() {
                     )}
                   </button>
 
-                  {/* Dropdown menu */}
                   {showUserMenu && (
                     <>
                       <div
@@ -163,7 +172,15 @@ export function Navbar() {
                             onClick={() => setShowUserMenu(false)}
                           >
                             <Sparkles className="w-4 h-4" />
-                            Go to App
+                            App Home
+                          </Link>
+                          <Link
+                            href="/app/analyze"
+                            className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-800 transition-colors"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Search className="w-4 h-4" />
+                            Analyze
                           </Link>
                           <Link
                             href="/app/settings"
@@ -220,7 +237,6 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Mobile menu button */}
             <button
               className="md:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -230,32 +246,41 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {showMobileMenu && (
           <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur">
             <nav className="container py-4 space-y-2">
               <Link
-                href="/#features"
+                href="/app"
                 className="block px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
                 onClick={() => setShowMobileMenu(false)}
               >
-                Features
-              </Link>
-              <Link
-                href="/#pricing"
-                className="block px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                Pricing
+                Home
               </Link>
               {user ? (
                 <>
                   <Link
-                    href="/app"
-                    className="block px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                    href="/app/analyze"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
                     onClick={() => setShowMobileMenu(false)}
                   >
-                    Go to App
+                    <Search className="w-4 h-4" />
+                    Analyze
+                  </Link>
+                  <Link
+                    href="/app/review"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Review
+                  </Link>
+                  <Link
+                    href="/app/settings"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
                   </Link>
                   {isAdmin(user.id) && (
                     <>
