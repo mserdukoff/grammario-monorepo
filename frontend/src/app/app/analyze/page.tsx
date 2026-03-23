@@ -265,7 +265,6 @@ export default function AnalyzePage() {
             upos: token.upos,
             feats: token.feats,
             segments: token.segments,
-            frequency_band: token.frequency_band,
             hasError: !!err,
             errorMessage: err?.message,
           },
@@ -374,7 +373,6 @@ export default function AnalyzePage() {
         upos: token.upos,
         feats: token.feats,
         segments: token.segments,
-        frequency_band: token.frequency_band,
       },
     }))
 

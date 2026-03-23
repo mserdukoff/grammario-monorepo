@@ -8,30 +8,11 @@ interface NodeData {
   upos: string
   feats?: string
   segments?: string[]
-  frequency_band?: number
   hasError?: boolean
   errorMessage?: string
 }
 
-const FREQUENCY_STYLES: Record<number, { bg: string; border: string; label: string }> = {
-  1: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", label: "Very Common" },
-  2: { bg: "bg-green-500/10", border: "border-green-500/20", label: "Common" },
-  3: { bg: "bg-yellow-500/10", border: "border-yellow-500/20", label: "Intermediate" },
-  4: { bg: "bg-orange-500/10", border: "border-orange-500/20", label: "Uncommon" },
-  5: { bg: "bg-red-500/10", border: "border-red-500/30", label: "Rare" },
-}
-
-const FREQUENCY_DOT_COLORS: Record<number, string> = {
-  1: "bg-emerald-400",
-  2: "bg-green-400",
-  3: "bg-yellow-400",
-  4: "bg-orange-400",
-  5: "bg-red-400",
-}
-
 export function WordNode({ data, selected }: { data: NodeData; selected: boolean }) {
-  const freqStyle = data.frequency_band ? FREQUENCY_STYLES[data.frequency_band] : null
-  const dotColor = data.frequency_band ? FREQUENCY_DOT_COLORS[data.frequency_band] : null
 
   return (
     <div className="relative group">
@@ -53,13 +34,6 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
           className="!bg-muted-foreground w-3 h-3"
         />
 
-        {/* Frequency dot indicator */}
-        {dotColor && (
-          <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-            <div className={cn("w-2 h-2 rounded-full", dotColor)} title={freqStyle?.label} />
-          </div>
-        )}
-
         <div className={cn("font-bold text-lg", data.hasError && "text-red-300 line-through decoration-red-500/50")}>
           {data.text}
         </div>
@@ -67,13 +41,6 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
         <div className="mt-1 rounded bg-secondary px-2 py-0.5 text-xs font-mono font-medium text-secondary-foreground">
           {data.upos}
         </div>
-
-        {/* Frequency band label */}
-        {freqStyle && (
-          <div className={cn("mt-1 rounded px-1.5 py-0.5 text-[9px] font-medium", freqStyle.bg, freqStyle.border, "border")}>
-            {freqStyle.label}
-          </div>
-        )}
 
         {data.segments && (
           <div className="mt-2 flex flex-wrap justify-center gap-1 border-t border-border pt-2">

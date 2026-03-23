@@ -18,7 +18,6 @@ class TokenNode(BaseModel):
     deprel: Optional[str] = Field(None, description="Dependency relation to the head.")
     misc: Optional[str] = Field(None, description="Miscellaneous annotations.")
     segments: Optional[List[str]] = Field(None, description="Morphological segments (e.g., for Turkish).")
-    frequency_band: Optional[int] = Field(None, description="Word frequency band: 1 (top 500) to 5 (rare, >10k).")
 
 
 class GrammarConcept(BaseModel):

@@ -125,7 +125,6 @@ async def health_check():
     from app.services.spacy_manager import spacy_manager
     from app.services.cache import cache_service
     from app.services.embeddings import embedding_service
-    from app.services.frequency import frequency_service
     import psutil
     import os
 
@@ -155,7 +154,6 @@ async def health_check():
         },
         "features": {
             "difficulty_scoring": True,
-            "frequency_analysis": frequency_service.supported_languages,
             "error_detection": True,
             "sentence_embeddings": embedding_service.available,
         },

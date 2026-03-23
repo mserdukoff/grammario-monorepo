@@ -2,7 +2,7 @@ import os
 import asyncio
 import time
 import logging
-from typing import List, Optional, Dict
+from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor
 
 from app.services.stanza_manager import stanza_manager
@@ -15,7 +15,6 @@ from app.models.schemas import (
 from app.services.llm_service import llm_service
 from app.services.cache import cache_service
 from app.services.difficulty_scorer import difficulty_scorer
-from app.services.frequency import frequency_service
 from app.services.error_detector import error_detector
 from app.services.embeddings import embedding_service
 
@@ -94,15 +93,6 @@ class NLPService:
             logger.warning(f"Embedding failed: {e}")
             return None
 
-    def _enrich_nodes(self, nodes: List[TokenNode], lang_code: str) -> Dict[int, int]:
-        """Add frequency bands to token nodes. Returns frequency_bands dict."""
-        freq_bands = frequency_service.annotate_nodes(nodes, lang_code)
-        for node in nodes:
-            band = freq_bands.get(node.id)
-            if band is not None:
-                node.frequency_band = band
-        return freq_bands
-
     async def analyze_text_async(self, text: str, lang_code: str) -> SentenceAnalysis:
         """Full analysis pipeline with parallel execution and ML enrichment."""
         if lang_code not in self._strategies:
@@ -134,12 +124,9 @@ class NLPService:
             raise results[0]
 
         # Phase 2: Post-processing (fast, CPU-only, ~1-5ms each)
-        freq_bands = self._enrich_nodes(nodes, lang_code)
-
-        # Difficulty scoring
         difficulty_info = None
         try:
-            level, score, features = difficulty_scorer.score(nodes, freq_bands)
+            level, score, features = difficulty_scorer.score(nodes)
             difficulty_info = DifficultyInfo(
                 level=level,
                 score=round(score, 3),
@@ -185,11 +172,10 @@ class NLPService:
 
         nodes = self._run_nlp_pipeline(text, lang_code)
         pedagogical_data = self._run_llm(text, lang_code)
-        freq_bands = self._enrich_nodes(nodes, lang_code)
 
         difficulty_info = None
         try:
-            level, score, features = difficulty_scorer.score(nodes, freq_bands)
+            level, score, features = difficulty_scorer.score(nodes)
             difficulty_info = DifficultyInfo(level=level, score=round(score, 3), features=features.to_dict())
         except Exception:
             pass
