@@ -33,8 +33,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
-        <div className="animate-pulse text-slate-500">Loading...</div>
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     )
   }
@@ -42,23 +42,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || !isAdmin(user.id)) return null
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex flex-col border-r border-slate-800 bg-slate-900/50 transition-all duration-200 shrink-0",
+          "flex flex-col border-r border-border bg-surface-2 transition-all duration-200 shrink-0",
           collapsed ? "w-16" : "w-60"
         )}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 h-14 border-b border-slate-800 shrink-0">
-          <Shield className="w-5 h-5 text-red-400 shrink-0" />
-          {!collapsed && <span className="font-bold text-sm text-red-400 truncate">Admin Console</span>}
+        <div className="flex items-center gap-2 px-4 h-14 border-b border-border shrink-0">
+          <Shield className="w-5 h-5 text-error shrink-0" />
+          {!collapsed && <span className="font-bold text-sm text-error truncate">Admin Console</span>}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="ml-auto p-1 rounded hover:bg-slate-800 transition-colors"
+            className="ml-auto p-1 rounded hover:bg-accent transition-colors"
           >
-            <ChevronLeft className={cn("w-4 h-4 text-slate-500 transition-transform", collapsed && "rotate-180")} />
+            <ChevronLeft className={cn("w-4 h-4 text-muted-foreground transition-transform", collapsed && "rotate-180")} />
           </button>
         </div>
 
@@ -73,8 +73,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   active
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface-2"
                 )}
                 title={collapsed ? item.label : undefined}
               >
@@ -86,10 +86,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-slate-800 p-2 space-y-1 shrink-0">
+        <div className="border-t border-border p-2 space-y-1 shrink-0">
           <Link
             href="/app"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
             title={collapsed ? "Back to App" : undefined}
           >
             <Sparkles className="w-4 h-4 shrink-0" />
@@ -97,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <button
             onClick={() => signOut()}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-red-400 hover:bg-slate-800/50 transition-colors w-full"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-error hover:bg-surface-2 transition-colors w-full"
             title={collapsed ? "Sign Out" : undefined}
           >
             <LogOut className="w-4 h-4 shrink-0" />

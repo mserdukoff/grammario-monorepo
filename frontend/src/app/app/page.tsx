@@ -3,14 +3,13 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
-  Sparkles,
   Search,
   BookOpen,
-  BarChart3,
   ArrowRight,
-  Globe,
-  Zap,
   Lock,
+  Flame,
+  Target,
+  TrendingUp,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -31,182 +30,176 @@ export default function AppHome() {
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-foreground relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="absolute top-0 z-[-2] h-screen w-screen bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
-
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <AppNavbar />
 
-      <main className="flex-1 relative z-10">
-        {/* Hero */}
-        <section className="relative pt-16 pb-20 md:pt-24 md:pb-32">
-          <div className="container max-w-5xl text-center space-y-8">
-            {user && profile && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-300">
-                <Sparkles className="w-4 h-4" />
-                Welcome back, {profile.display_name || "learner"}
-              </div>
-            )}
-
-            <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1]">
-              Your Grammar <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400">
-                Workspace
-              </span>
-            </h1>
-
-            <p className="max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
-              Deconstruct sentences, build vocabulary, and track your progress across 5 languages — all in one place.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {LANGUAGES.map((lang) => (
-                <span
-                  key={lang.name}
-                  className="px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm text-slate-300"
-                >
-                  {lang.flag} {lang.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Feature Cards */}
-        <section className="pb-24">
-          <div className="container max-w-5xl">
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Analyze Card */}
-              <div className="group relative rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 space-y-4 transition-all hover:border-indigo-500/40 hover:bg-slate-900/80">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                  <Search className="w-6 h-6 text-indigo-400" />
-                </div>
-                <h3 className="text-xl font-bold">Analyze</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Parse any sentence into its grammatical components with interactive dependency tree visualizations.
+      <main className="flex-1">
+        <div className="container max-w-screen-xl py-10 md:py-16">
+          {/* Welcome */}
+          <div className="mb-12">
+            {user && profile ? (
+              <>
+                <h1 className="font-heading text-3xl md:text-4xl italic tracking-tight mb-2">
+                  Welcome back, {profile.display_name || "learner"}
+                </h1>
+                <p className="text-muted-foreground">
+                  Continue your learning across {LANGUAGES.map(l => l.flag).join(" ")}
                 </p>
+              </>
+            ) : (
+              <>
+                <h1 className="font-heading text-3xl md:text-4xl italic tracking-tight mb-2">
+                  Your grammar workspace
+                </h1>
+                <p className="text-muted-foreground">
+                  Deconstruct sentences, build vocabulary, and track your progress across 5 languages.
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main content area */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Analyze - primary action */}
+              <div className="rounded-lg border border-border bg-card p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-1">Analyze a sentence</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Parse any sentence into its grammatical components with interactive dependency visualizations.
+                    </p>
+                  </div>
+                  <Search className="w-5 h-5 text-primary shrink-0 mt-1" />
+                </div>
                 {user ? (
                   <Link href="/app/analyze">
-                    <Button className="w-full mt-2 group-hover:bg-indigo-600 transition-colors">
+                    <Button className="mt-2">
                       Open Analyzer
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 ) : (
                   <Button
-                    className="w-full mt-2"
                     variant="outline"
+                    className="mt-2"
                     onClick={() => setShowAuthModal(true)}
                   >
                     <Lock className="w-4 h-4 mr-2" />
-                    Sign in to Analyze
+                    Sign in to analyze
                   </Button>
                 )}
               </div>
 
-              {/* Review Card */}
-              <div className="group relative rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 space-y-4 transition-all hover:border-emerald-500/40 hover:bg-slate-900/80">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-emerald-400" />
+              {/* Review */}
+              <div className="rounded-lg border border-border bg-card p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-1">Vocabulary review</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Strengthen your vocabulary with spaced repetition flashcards powered by the SM-2 algorithm.
+                    </p>
+                  </div>
+                  <BookOpen className="w-5 h-5 text-primary shrink-0 mt-1" />
                 </div>
-                <h3 className="text-xl font-bold">Review</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Strengthen your vocabulary with spaced repetition flashcards powered by the SM-2 algorithm.
-                </p>
                 {user ? (
                   <Link href="/app/review">
-                    <Button className="w-full mt-2 group-hover:bg-emerald-600 transition-colors" variant="outline">
-                      Start Review
+                    <Button variant="outline" className="mt-2">
+                      Start review
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 ) : (
                   <Button
-                    className="w-full mt-2"
                     variant="outline"
+                    className="mt-2"
                     onClick={() => setShowAuthModal(true)}
                   >
                     <Lock className="w-4 h-4 mr-2" />
-                    Sign in to Review
+                    Sign in to review
                   </Button>
                 )}
               </div>
+            </div>
 
-              {/* Progress Card */}
-              <div className="group relative rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 space-y-4 transition-all hover:border-amber-500/40 hover:bg-slate-900/80">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-amber-400" />
-                </div>
-                <h3 className="text-xl font-bold">Progress</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Track your learning with XP, streaks, daily goals, and level progression to stay motivated.
-                </p>
-                {user && profile ? (
-                  <div className="mt-2 space-y-3">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                        <p className="text-lg font-bold">{profile.level}</p>
-                        <p className="text-[10px] text-slate-500">Level</p>
+            {/* Sidebar: Progress */}
+            <div className="space-y-6">
+              {user && profile ? (
+                <>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Your progress</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-surface-2">
+                            <TrendingUp className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Level {profile.level}</p>
+                            <p className="text-xs text-muted-foreground">{profile.xp} XP total</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                        <p className="text-lg font-bold">{profile.streak}</p>
-                        <p className="text-[10px] text-slate-500">Streak</p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-surface-2">
+                            <Flame className="w-4 h-4 text-warning" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{profile.streak} day streak</p>
+                            <p className="text-xs text-muted-foreground">Best: {profile.longest_streak} days</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                        <p className="text-lg font-bold">{profile.total_analyses}</p>
-                        <p className="text-[10px] text-slate-500">Analyzed</p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-surface-2">
+                            <Target className="w-4 h-4 text-success" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{profile.total_analyses} analyses</p>
+                            <p className="text-xs text-muted-foreground">Total sentences analyzed</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ) : (
+
+                  <div className="border-t border-border pt-6">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Languages</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {LANGUAGES.map((lang) => (
+                        <span
+                          key={lang.name}
+                          className="px-3 py-1.5 rounded-md bg-surface-2 text-sm"
+                        >
+                          {lang.flag} {lang.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="font-medium mb-2">Track your progress</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Sign in to track XP, streaks, daily goals, and level progression.
+                  </p>
                   <Button
-                    className="w-full mt-2"
                     variant="outline"
+                    className="w-full"
                     onClick={() => setShowAuthModal(true)}
                   >
                     <Lock className="w-4 h-4 mr-2" />
-                    Sign in to Track
+                    Sign in
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
-        </section>
-
-        {/* Quick Info */}
-        <section className="pb-24">
-          <div className="container max-w-5xl">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-indigo-500/10 shrink-0">
-                  <Zap className="w-5 h-5 text-indigo-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Deterministic Parsing</h4>
-                  <p className="text-sm text-slate-400">Powered by Stanza NLP — no hallucinations, just accurate grammar analysis.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
-                  <Globe className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">5 Languages</h4>
-                  <p className="text-sm text-slate-400">Italian, Spanish, German, Russian, and Turkish — with more on the way.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">AI Teacher&apos;s Notes</h4>
-                  <p className="text-sm text-slate-400">Get translations, grammar explanations, and &ldquo;why&rdquo; answers from an AI tutor.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        </div>
       </main>
 
       <AuthModal

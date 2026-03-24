@@ -1,13 +1,8 @@
 "use client"
 
-/**
- * History Panel
- * 
- * Displays recent sentence analyses with the ability to favorite and revisit.
- */
 import { useState } from "react"
 import { formatDistanceToNow } from "date-fns"
-import { Clock, Star, Trash2, ChevronRight, Languages } from "lucide-react"
+import { Clock, Star, Trash2, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Analysis } from "@/lib/supabase/database.types"
 
@@ -42,12 +37,9 @@ export function HistoryPanel({
 
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-20 rounded-lg bg-slate-800/50 animate-pulse"
-          />
+          <div key={i} className="h-16 rounded-md bg-surface-2 animate-pulse" />
         ))}
       </div>
     )
@@ -56,26 +48,25 @@ export function HistoryPanel({
   if (analyses.length === 0) {
     return (
       <div className="text-center py-8">
-        <Clock className="w-12 h-12 mx-auto text-slate-600 mb-3" />
-        <p className="text-muted-foreground">No analyses yet</p>
-        <p className="text-sm text-slate-500 mt-1">
-          Your sentence history will appear here
+        <Clock className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No analyses yet</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Your history will appear here
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filter tabs */}
-      <div className="flex gap-2">
+    <div className="space-y-3">
+      <div className="flex gap-1">
         <button
           onClick={() => setFilter("all")}
           className={cn(
-            "px-3 py-1.5 text-sm rounded-lg transition-colors",
+            "px-2.5 py-1 text-xs rounded-md transition-colors",
             filter === "all"
-              ? "bg-indigo-500/20 text-indigo-400"
-              : "text-muted-foreground hover:text-foreground hover:bg-slate-800"
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           )}
         >
           All ({analyses.length})
@@ -83,80 +74,75 @@ export function HistoryPanel({
         <button
           onClick={() => setFilter("favorites")}
           className={cn(
-            "px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1",
+            "px-2.5 py-1 text-xs rounded-md transition-colors flex items-center gap-1",
             filter === "favorites"
-              ? "bg-amber-500/20 text-amber-400"
-              : "text-muted-foreground hover:text-foreground hover:bg-slate-800"
+              ? "bg-warning-light text-warning font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           )}
         >
           <Star className="w-3 h-3" />
-          Favorites ({analyses.filter((a) => a.is_favorite).length})
+          ({analyses.filter((a) => a.is_favorite).length})
         </button>
       </div>
 
-      {/* Analysis list */}
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+      <div className="space-y-1 max-h-[400px] overflow-y-auto">
         {filteredAnalyses.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-4">
-            No favorites yet. Star sentences to save them here.
+          <p className="text-center text-xs text-muted-foreground py-4">
+            No favorites yet.
           </p>
         ) : (
           filteredAnalyses.map((analysis) => (
             <div
               key={analysis.id}
-              className="group relative rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 transition-colors"
+              className="group relative rounded-md hover:bg-accent transition-colors"
             >
               <button
                 onClick={() => onSelect(analysis)}
-                className="w-full text-left p-3 pr-24"
+                className="w-full text-left p-2.5 pr-16"
               >
                 <div className="flex items-start gap-2">
-                  <span className="text-lg shrink-0">
+                  <span className="text-sm shrink-0">
                     {LANGUAGE_FLAGS[analysis.language] || "🌐"}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{analysis.text}</p>
+                    <p className="text-xs font-medium truncate">{analysis.text}</p>
                     {analysis.translation && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {analysis.translation}
                       </p>
                     )}
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
                       {formatDistanceToNow(new Date(analysis.created_at), {
                         addSuffix: true,
                       })}
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </button>
 
-              {/* Action buttons */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onToggleFavorite(analysis.id, !analysis.is_favorite)
                   }}
                   className={cn(
-                    "p-1.5 rounded-md transition-colors",
+                    "p-1 rounded transition-colors",
                     analysis.is_favorite
-                      ? "text-amber-400 hover:bg-amber-500/20"
-                      : "text-slate-400 hover:bg-slate-700 hover:text-amber-400"
+                      ? "text-warning"
+                      : "text-muted-foreground hover:text-warning"
                   )}
                 >
-                  <Star
-                    className={cn("w-4 h-4", analysis.is_favorite && "fill-current")}
-                  />
+                  <Star className={cn("w-3.5 h-3.5", analysis.is_favorite && "fill-current")} />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onDelete(analysis.id)
                   }}
-                  className="p-1.5 rounded-md text-slate-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                  className="p-1 rounded text-muted-foreground hover:text-error transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

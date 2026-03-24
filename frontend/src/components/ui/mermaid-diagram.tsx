@@ -61,9 +61,9 @@ export function MermaidDiagram({ chart, title }: MermaidDiagramProps) {
   }, [chart])
 
   return (
-    <div className="my-8 rounded-xl border border-slate-800 bg-slate-900/50 p-6 overflow-x-auto">
+    <div className="my-8 rounded-xl border border-border bg-surface-2 p-6 overflow-x-auto">
       {title && (
-        <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           {title}
         </h4>
       )}

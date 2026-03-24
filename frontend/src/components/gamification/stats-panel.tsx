@@ -1,12 +1,7 @@
 "use client"
 
-/**
- * Stats Panel
- * 
- * Displays user gamification stats: XP, level, streak, daily goal.
- */
 import { useAuth, xpProgress, xpForNextLevel, XP_PER_LEVEL } from "@/lib/auth-context"
-import { Flame, Zap, Target, Trophy, TrendingUp, Loader2 } from "lucide-react"
+import { Flame, Zap, Target, TrendingUp, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface StatsPanelProps {
@@ -21,8 +16,8 @@ export function StatsPanel({ dailyGoal, className, compact = false }: StatsPanel
   if (profileLoading) {
     return (
       <div className={cn("flex items-center justify-center py-8", className)}>
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading stats...</span>
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
       </div>
     )
   }
@@ -37,43 +32,18 @@ export function StatsPanel({ dailyGoal, className, compact = false }: StatsPanel
   if (compact) {
     return (
       <div className={cn("flex items-center gap-4", className)}>
-        {/* Streak */}
         <div className="flex items-center gap-1.5">
-          <div className={cn(
-            "p-1.5 rounded-lg",
-            profile.streak > 0 ? "bg-orange-500/20" : "bg-slate-800"
-          )}>
-            <Flame className={cn(
-              "w-4 h-4",
-              profile.streak > 0 ? "text-orange-500" : "text-slate-500"
-            )} />
-          </div>
+          <Flame className={cn("w-4 h-4", profile.streak > 0 ? "text-warning" : "text-muted-foreground")} />
           <span className="text-sm font-medium">{profile.streak}</span>
         </div>
-
-        {/* XP */}
         <div className="flex items-center gap-1.5">
-          <div className="p-1.5 rounded-lg bg-indigo-500/20">
-            <Zap className="w-4 h-4 text-indigo-500" />
-          </div>
+          <Zap className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium">{profile.xp} XP</span>
         </div>
-
-        {/* Daily Goal */}
         {dailyGoal && (
           <div className="flex items-center gap-1.5">
-            <div className={cn(
-              "p-1.5 rounded-lg",
-              dailyGoal.is_achieved ? "bg-emerald-500/20" : "bg-slate-800"
-            )}>
-              <Target className={cn(
-                "w-4 h-4",
-                dailyGoal.is_achieved ? "text-emerald-500" : "text-slate-500"
-              )} />
-            </div>
-            <span className="text-sm font-medium">
-              {dailyGoal.completed}/{dailyGoal.target}
-            </span>
+            <Target className={cn("w-4 h-4", dailyGoal.is_achieved ? "text-success" : "text-muted-foreground")} />
+            <span className="text-sm font-medium">{dailyGoal.completed}/{dailyGoal.target}</span>
           </div>
         )}
       </div>
@@ -82,119 +52,68 @@ export function StatsPanel({ dailyGoal, className, compact = false }: StatsPanel
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Level & XP Card */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-indigo-500/20">
-              <Trophy className="w-5 h-5 text-indigo-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Level</p>
-              <p className="text-xl font-bold">{profile.level}</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Total XP</p>
-            <p className="text-lg font-semibold text-indigo-400">{profile.xp}</p>
-          </div>
+      {/* Level & XP */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">Level {profile.level}</p>
+          <p className="text-xs text-muted-foreground">{profile.xp} XP</p>
         </div>
-
-        {/* XP Progress Bar */}
         <div className="space-y-1">
+          <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{xpIntoLevel} / {xpNeeded - currentLevelXp} XP</span>
             <span>Level {profile.level + 1}</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Streak */}
-        <div className={cn(
-          "rounded-xl border p-4",
-          profile.streak > 0
-            ? "border-orange-500/30 bg-orange-950/20"
-            : "border-slate-800 bg-slate-900/50"
-        )}>
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className={cn(
-              "w-5 h-5",
-              profile.streak > 0 ? "text-orange-500" : "text-slate-500"
-            )} />
-            <span className="text-xs text-muted-foreground">Streak</span>
+      {/* Stats list */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Flame className={cn("w-4 h-4", profile.streak > 0 ? "text-warning" : "text-muted-foreground")} />
+            <span className="text-sm">Streak</span>
           </div>
-          <p className="text-2xl font-bold">{profile.streak}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Best: {profile.longest_streak} days
-          </p>
+          <div className="text-right">
+            <span className="text-sm font-medium">{profile.streak} days</span>
+            <p className="text-xs text-muted-foreground">Best: {profile.longest_streak}</p>
+          </div>
         </div>
 
-        {/* Daily Goal */}
-        <div className={cn(
-          "rounded-xl border p-4",
-          dailyGoal?.is_achieved
-            ? "border-emerald-500/30 bg-emerald-950/20"
-            : "border-slate-800 bg-slate-900/50"
-        )}>
-          <div className="flex items-center gap-2 mb-2">
-            <Target className={cn(
-              "w-5 h-5",
-              dailyGoal?.is_achieved ? "text-emerald-500" : "text-slate-500"
-            )} />
-            <span className="text-xs text-muted-foreground">Today</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Target className={cn("w-4 h-4", dailyGoal?.is_achieved ? "text-success" : "text-muted-foreground")} />
+            <span className="text-sm">Today</span>
           </div>
-          <p className="text-2xl font-bold">
-            {dailyGoal?.completed || 0}/{dailyGoal?.target || 5}
-          </p>
-          {dailyGoal?.is_achieved ? (
-            <p className="text-xs text-emerald-400 mt-1">Goal achieved! 🎉</p>
-          ) : (
-            <p className="text-xs text-muted-foreground mt-1">
-              {(dailyGoal?.target || 5) - (dailyGoal?.completed || 0)} to go
-            </p>
-          )}
+          <div className="text-right">
+            <span className="text-sm font-medium">{dailyGoal?.completed || 0}/{dailyGoal?.target || 5}</span>
+            {dailyGoal?.is_achieved ? (
+              <p className="text-xs text-success">Done!</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">{(dailyGoal?.target || 5) - (dailyGoal?.completed || 0)} to go</p>
+            )}
+          </div>
         </div>
 
-        {/* Total Analyses */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-cyan-500" />
-            <span className="text-xs text-muted-foreground">Analyses</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="text-sm">Analyses</span>
           </div>
-          <p className="text-2xl font-bold">{profile.total_analyses}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total sentences</p>
+          <span className="text-sm font-medium">{profile.total_analyses}</span>
         </div>
 
-        {/* Pro Status */}
-        <div className={cn(
-          "rounded-xl border p-4",
-          profile.is_pro
-            ? "border-amber-500/30 bg-amber-950/20"
-            : "border-slate-800 bg-slate-900/50"
-        )}>
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className={cn(
-              "w-5 h-5",
-              profile.is_pro ? "text-amber-500" : "text-slate-500"
-            )} />
-            <span className="text-xs text-muted-foreground">Plan</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Zap className={cn("w-4 h-4", profile.is_pro ? "text-warning" : "text-muted-foreground")} />
+            <span className="text-sm">Plan</span>
           </div>
-          <p className="text-xl font-bold">
-            {profile.is_pro ? "Pro" : "Free"}
-          </p>
-          {!profile.is_pro && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Upgrade for unlimited
-            </p>
-          )}
+          <span className="text-sm font-medium">{profile.is_pro ? "Pro" : "Free"}</span>
         </div>
       </div>
     </div>

@@ -1,154 +1,131 @@
 "use client"
 
-import { Globe, Layers, Zap } from "lucide-react"
-
 export function FeaturesSection() {
   return (
-    <section id="features" className="container py-12 md:py-24 space-y-24">
-      <div className="text-center max-w-[58rem] mx-auto mb-16">
-        <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl font-bold mb-4">
-          Linguistic DNA Deconstructed
-        </h2>
-        <p className="text-muted-foreground sm:text-lg sm:leading-7">
-          Different language families require different analytical strategies. We've built specific engines for each.
-        </p>
-      </div>
-
-      {/* Feature 1: Visual Grammar (Full Width) */}
-      <div className="grid lg:grid-cols-2 gap-12 items-center">
-        <div className="space-y-6">
-          <div className="inline-flex items-center rounded-lg bg-indigo-500/10 px-3 py-1 text-sm font-medium text-indigo-400">
-            <Zap className="mr-2 h-4 w-4" />
-            Core Technology
-          </div>
-          <h3 className="text-3xl font-bold">Interactive Dependency Parsing</h3>
-          <p className="text-lg text-muted-foreground">
-            Don't just read grammar rules. See them. Our engine visualizes the hidden structure of sentences, showing you exactly how words relate to each other in real-time.
+    <section id="features" className="border-t border-border bg-surface-1">
+      <div className="container max-w-screen-xl py-20 md:py-28 space-y-24">
+        <div className="max-w-2xl">
+          <h2 className="font-heading text-3xl md:text-4xl italic tracking-tight mb-4">
+            How it works
+          </h2>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            Submit a sentence in any supported language. Get back a complete structural analysis with interactive visualizations, grammar explanations, and vocabulary tracking.
           </p>
-          <ul className="space-y-3 text-muted-foreground">
-            <li className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              Color-coded parts of speech
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              Interactive dependency arrows
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              Morphological breakdown per token
-            </li>
-          </ul>
         </div>
-        <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 p-2 shadow-2xl">
-           <div className="rounded-lg overflow-hidden bg-slate-950 aspect-video flex flex-col border border-slate-800 relative group">
-              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-cyan-500/5" />
-              
-              {/* Fake UI Header */}
-              <div className="border-b border-slate-800 bg-slate-900/80 px-4 py-2 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                   <div className="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
-                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
-                   <div className="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
-                </div>
-                <div className="ml-4 h-4 w-32 bg-slate-800 rounded-full"></div>
+
+        {/* Feature 1: Dependency Parsing */}
+        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-2 space-y-4">
+            <span className="text-sm font-medium text-primary">01</span>
+            <h3 className="text-2xl font-semibold tracking-tight">Interactive dependency parsing</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Every word is analyzed for its part of speech, morphological features, and syntactic role. See exactly how words relate to each other through directed dependency graphs.
+            </p>
+            <ul className="space-y-2 text-muted-foreground text-sm">
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                Linear sentence view and tree layout modes
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                Color-coded parts of speech
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                Morphological breakdown per token
+              </li>
+            </ul>
+          </div>
+          <div className="lg:col-span-3">
+            <div className="rounded-lg border border-border bg-card p-6 md:p-8">
+              <div className="flex items-end justify-between gap-6 flex-wrap">
+                {[
+                  { word: "Die", lemma: "der", dep: "det", pos: "DET", head: "Katze" },
+                  { word: "Katze", lemma: "Katze", dep: "nsubj", pos: "NOUN", head: "frisst" },
+                  { word: "frisst", lemma: "fressen", dep: "root", pos: "VERB", head: null },
+                  { word: "den", lemma: "der", dep: "det", pos: "DET", head: "Fisch" },
+                  { word: "Fisch", lemma: "Fisch", dep: "obj", pos: "NOUN", head: "frisst" },
+                ].map((token, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 flex-1 min-w-[60px]">
+                    <span className="text-xs text-muted-foreground font-mono">{token.dep}</span>
+                    <span className="text-base font-medium">{token.word}</span>
+                    <span className="text-[11px] text-muted-foreground italic">{token.lemma}</span>
+                    <span className="text-[10px] font-mono tracking-wider text-primary/70 bg-primary/5 px-1.5 py-0.5 rounded">
+                      {token.pos}
+                    </span>
+                  </div>
+                ))}
               </div>
+              <p className="text-xs text-muted-foreground mt-6 text-center font-mono">
+                Die Katze frisst den Fisch. — &ldquo;The cat eats the fish.&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
 
-              {/* Fake Content Area */}
-              <div className="flex-1 p-8 flex flex-col justify-center items-center relative">
-                 {/* Visual Nodes */}
-                 <div className="flex gap-8 items-center relative z-10">
-                    <div className="flex flex-col items-center gap-2">
-                       <div className="px-3 py-1.5 rounded-lg bg-indigo-900/40 border border-indigo-500/30 text-indigo-300 font-mono text-sm">
-                          SUBJECT
-                       </div>
-                       <div className="w-0.5 h-4 bg-slate-700"></div>
-                       <div className="text-xl font-bold text-slate-200">The Cat</div>
-                    </div>
-
-                    <div className="w-16 h-0.5 bg-slate-700 relative">
-                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 uppercase tracking-widest bg-slate-950 px-1">nsubj</div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-2">
-                       <div className="px-3 py-1.5 rounded-lg bg-cyan-900/40 border border-cyan-500/30 text-cyan-300 font-mono text-sm">
-                          VERB
-                       </div>
-                       <div className="w-0.5 h-4 bg-slate-700"></div>
-                       <div className="text-xl font-bold text-slate-200">Eats</div>
-                    </div>
-
-                     <div className="w-16 h-0.5 bg-slate-700 relative">
-                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 uppercase tracking-widest bg-slate-950 px-1">obj</div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-2">
-                       <div className="px-3 py-1.5 rounded-lg bg-emerald-900/40 border border-emerald-500/30 text-emerald-300 font-mono text-sm">
-                          OBJECT
-                       </div>
-                       <div className="w-0.5 h-4 bg-slate-700"></div>
-                       <div className="text-xl font-bold text-slate-200">Fish</div>
-                    </div>
-                 </div>
-
-                 {/* Background Grid */}
-                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f1a_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f1a_1px,transparent_1px)] bg-[size:16px_16px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_100%,transparent_100%)] pointer-events-none" />
+        {/* Feature 2 & 3 side by side */}
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="space-y-4">
+            <span className="text-sm font-medium text-primary">02</span>
+            <h3 className="text-2xl font-semibold tracking-tight">Inflection-heavy languages</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              German and Russian change word forms based on grammatical case. See case governance (nominative, accusative, dative, genitive) and separable verbs visualized clearly.
+            </p>
+            <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="px-2 py-1 rounded bg-muted font-mono text-xs">der Mann</span>
+                <span className="text-muted-foreground">&rarr;</span>
+                <span className="px-2 py-1 rounded bg-muted font-mono text-xs">dem Mann</span>
               </div>
-              
-              {/* Fake UI Footer */}
-               <div className="border-t border-slate-800 bg-slate-900/50 px-4 py-3 flex justify-between items-center text-xs text-slate-500 font-mono">
-                  <span>ANALYSIS_COMPLETE</span>
-                  <span>CONFIDENCE: 99.8%</span>
-               </div>
-           </div>
-        </div>
-      </div>
-
-      {/* Feature 2 & 3: Specific Families */}
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Feature 2 */}
-        <div className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-8 hover:bg-slate-900/60 transition-all">
-          <div className="mb-4 inline-block rounded-lg bg-cyan-500/10 p-3 text-cyan-400">
-            <Globe className="h-6 w-6" />
+              <p className="text-xs text-muted-foreground font-mono">Case: Nominative &rarr; Dative [Masculine]</p>
+            </div>
           </div>
-          <h3 className="mb-2 text-2xl font-bold text-cyan-100">Inflection Heavy</h3>
-          <p className="mb-6 text-muted-foreground">
-            Perfect for German & Russian. Visualize case governance (Nom, Acc, Dat, Gen), separable verbs, and perfective/imperfective aspect distinctions instantly.
-          </p>
-          <div className="h-48 w-full rounded-xl bg-slate-950/50 border border-slate-800/50 p-4 relative overflow-hidden">
-             {/* Abstract Visual */}
-             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent" />
-             <div className="flex gap-2 mb-2">
-                <span className="bg-cyan-900/40 text-cyan-200 px-2 py-1 rounded text-xs border border-cyan-700/30">Der Mann</span>
-                <span className="text-slate-500">→</span>
-                <span className="bg-cyan-900/40 text-cyan-200 px-2 py-1 rounded text-xs border border-cyan-700/30">dem Mann</span>
-             </div>
-             <div className="text-xs text-slate-500 font-mono mt-2">CASE: Dative [Masculine]</div>
+
+          <div className="space-y-4">
+            <span className="text-sm font-medium text-primary">03</span>
+            <h3 className="text-2xl font-semibold tracking-tight">Agglutinative morphology</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Turkish builds meaning by stacking suffixes. See how <code className="text-foreground bg-muted px-1 rounded text-sm">evlerinizden</code> decomposes into atomic parts with full glossing.
+            </p>
+            <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center gap-1.5 text-sm flex-wrap">
+                {["ev", "ler", "iniz", "den"].map((seg, i) => (
+                  <span key={i}>
+                    {i > 0 && <span className="text-muted-foreground mx-0.5">+</span>}
+                    <span className="px-2 py-1 rounded bg-muted font-mono text-xs">{seg}</span>
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground font-mono">house + PL + 2PL.POSS + ABL</p>
+            </div>
           </div>
         </div>
 
-        {/* Feature 3 */}
-        <div className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-8 hover:bg-slate-900/60 transition-all">
-          <div className="mb-4 inline-block rounded-lg bg-emerald-500/10 p-3 text-emerald-400">
-            <Layers className="h-6 w-6" />
+        {/* Feature 4: AI Teacher */}
+        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-2 space-y-4">
+            <span className="text-sm font-medium text-primary">04</span>
+            <h3 className="text-2xl font-semibold tracking-tight">AI-powered explanations</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Every analysis includes teacher&apos;s notes: translations, grammar concept breakdowns, &ldquo;why is it this way?&rdquo; explanations, and contextual tips generated by an AI tutor.
+            </p>
           </div>
-          <h3 className="mb-2 text-2xl font-bold text-emerald-100">Agglutinative Logic</h3>
-          <p className="mb-6 text-muted-foreground">
-             X-Ray vision for Turkish suffix chains. See exactly how <code>evlerinizden</code> breaks down into parts. We decompose complex words into their atomic meanings.
-          </p>
-          <div className="h-48 w-full rounded-xl bg-slate-950/50 border border-slate-800/50 p-4 relative overflow-hidden">
-             {/* Abstract Visual */}
-             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent" />
-             <div className="flex flex-wrap gap-1 mt-4">
-                <span className="bg-emerald-900/40 text-emerald-200 px-1.5 py-0.5 rounded text-xs border border-emerald-700/30">ev</span>
-                <span className="text-slate-600">+</span>
-                <span className="bg-emerald-900/40 text-emerald-200 px-1.5 py-0.5 rounded text-xs border border-emerald-700/30">ler</span>
-                <span className="text-slate-600">+</span>
-                <span className="bg-emerald-900/40 text-emerald-200 px-1.5 py-0.5 rounded text-xs border border-emerald-700/30">iniz</span>
-                <span className="text-slate-600">+</span>
-                <span className="bg-emerald-900/40 text-emerald-200 px-1.5 py-0.5 rounded text-xs border border-emerald-700/30">den</span>
-             </div>
-             <div className="text-xs text-slate-500 font-mono mt-2">house + PL + YOUR + ABL</div>
+          <div className="lg:col-span-3 space-y-4">
+            <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Translation</p>
+                <p className="text-sm italic">&ldquo;The cat eats the fish.&rdquo;</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Key concept</p>
+                <p className="text-sm font-medium mb-1">Definite Articles</p>
+                <p className="text-sm text-muted-foreground">Italian has different articles based on gender and starting letter. &ldquo;Il&rdquo; is for masculine singular nouns starting with a consonant.</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Why &ldquo;mangia&rdquo; and not &ldquo;mangiano&rdquo;?</p>
+                <p className="text-sm text-muted-foreground">The verb agrees with its singular subject &ldquo;il gatto&rdquo;. Use &ldquo;mangiano&rdquo; for plural subjects like &ldquo;i gatti&rdquo;.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

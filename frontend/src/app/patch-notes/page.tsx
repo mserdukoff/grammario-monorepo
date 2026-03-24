@@ -9,7 +9,7 @@ import Link from "next/link"
 
 function Md({ children }: { children: string }) {
   return (
-    <div className="prose prose-invert max-w-none prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-4 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-800 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-300 prose-p:leading-7 prose-p:my-3 prose-li:text-slate-300 prose-li:my-1 prose-strong:text-white prose-strong:font-semibold prose-code:text-indigo-400 prose-code:bg-slate-800/60 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-lg prose-pre:my-4 prose-table:my-6 prose-th:border prose-th:border-slate-700 prose-th:bg-slate-800/60 prose-th:px-4 prose-th:py-2.5 prose-th:text-left prose-th:text-sm prose-th:font-semibold prose-th:text-slate-200 prose-td:border prose-td:border-slate-800 prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:text-slate-300 prose-hr:border-slate-800 prose-hr:my-8 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:text-indigo-300 prose-ol:my-4 prose-ul:my-4 prose-blockquote:border-indigo-500 prose-blockquote:text-slate-400">
+    <div className="prose max-w-none prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-4 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:text-foreground prose-p:leading-7 prose-p:my-3 prose-li:text-foreground prose-li:my-1 prose-strong:text-foreground prose-strong:font-semibold prose-code:text-primary prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-pre:bg-surface-2 prose-pre:border prose-pre:border-border prose-pre:rounded-lg prose-pre:my-4 prose-table:my-6 prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2.5 prose-th:text-left prose-th:text-sm prose-th:font-semibold prose-th:text-foreground prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:text-foreground prose-hr:border-border prose-hr:my-8 prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary prose-ol:my-4 prose-ul:my-4 prose-blockquote:border-primary prose-blockquote:text-muted-foreground">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   )
@@ -409,7 +409,7 @@ const highlights = [
 
 export default function PatchNotesPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />
 
       <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
@@ -424,7 +424,7 @@ export default function PatchNotesPage() {
         {/* --- Simplified Summary --- */}
         <div className="mb-12">
           <h1 className="text-3xl font-bold mb-2">What&apos;s New in Grammario</h1>
-          <p className="text-lg text-slate-400 mb-8">
+          <p className="text-lg text-muted-foreground mb-8">
             A major upgrade to how Grammario analyzes sentences, with new features for learners
             and significant speed improvements under the hood.
           </p>
@@ -433,24 +433,24 @@ export default function PatchNotesPage() {
             {highlights.map((item) => (
               <div
                 key={item.title}
-                className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 flex gap-4"
+                className="rounded-xl border border-border bg-surface-2 p-5 flex gap-4"
               >
                 <div className="shrink-0 mt-0.5">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                    <item.icon className="w-4.5 h-4.5 text-indigo-400" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <item.icon className="w-4.5 h-4.5 text-primary" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm text-white mb-1">{item.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{item.description}</p>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-8 mb-4">
-          <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-6">
+        <div className="border-t border-border pt-8 mb-4">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-6">
             Technical Implementation Details
           </p>
         </div>
@@ -489,7 +489,7 @@ export default function PatchNotesPage() {
         </article>
       </main>
 
-      <footer className="border-t border-slate-800 py-6 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
         <p>Grammario &mdash; Visual Grammar for Deep Learners</p>
       </footer>
     </div>

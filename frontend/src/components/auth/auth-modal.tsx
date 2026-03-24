@@ -1,10 +1,5 @@
 "use client"
 
-/**
- * Authentication Modal
- * 
- * Combined login/signup modal with email and Google OAuth.
- */
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Mail, Loader2, Eye, EyeOff } from "lucide-react"
@@ -78,54 +73,51 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
           onClick={onClose}
         />
 
-        {/* Modal */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.97, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.97, y: 10 }}
+          transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
           className="relative z-10 w-full max-w-md mx-4"
         >
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Header */}
-            <div className="relative px-6 pt-6 pb-4 bg-gradient-to-b from-indigo-950/50 to-transparent">
+          <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 pt-6 pb-4">
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 p-2 rounded-lg hover:bg-slate-800 transition-colors"
+                className="absolute right-4 top-4 p-2 rounded-md hover:bg-accent transition-colors"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
 
-              <h2 className="text-2xl font-bold">
-                {mode === "login" && "Welcome Back"}
-                {mode === "signup" && "Create Account"}
-                {mode === "reset" && "Reset Password"}
+              <h2 className="font-heading text-2xl italic">
+                {mode === "login" && "Welcome back"}
+                {mode === "signup" && "Create account"}
+                {mode === "reset" && "Reset password"}
               </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                {mode === "login" && "Sign in to continue your learning journey"}
-                {mode === "signup" && "Join thousands of language learners"}
+              <p className="text-muted-foreground text-sm mt-1">
+                {mode === "login" && "Sign in to continue learning"}
+                {mode === "signup" && "Start your language journey"}
                 {mode === "reset" && "We'll send you a reset link"}
               </p>
             </div>
 
-            {/* Form */}
-            <div className="p-6 space-y-4">
+            <div className="px-6 pb-6 space-y-4">
               {mode !== "reset" && (
                 <Button
                   variant="outline"
-                  className="w-full h-12 bg-slate-800/50 border-slate-700 hover:bg-slate-800"
+                  className="w-full h-11"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
                 >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -150,43 +142,39 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
               {mode !== "reset" && (
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-700" />
+                    <div className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-slate-900 px-2 text-slate-500">Or continue with</span>
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 {mode === "signup" && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                      Display Name
-                    </label>
+                    <label className="block text-sm font-medium mb-1.5">Name</label>
                     <input
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Your name"
-                      className="w-full h-12 px-4 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full h-10 px-3 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                       required
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium mb-1.5">Email</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full h-12 pl-11 pr-4 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full h-10 pl-9 pr-3 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                       required
                     />
                   </div>
@@ -194,23 +182,21 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
 
                 {mode !== "reset" && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                      Password
-                    </label>
+                    <label className="block text-sm font-medium mb-1.5">Password</label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full h-12 px-4 pr-11 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        placeholder="Min 6 characters"
+                        className="w-full h-10 px-3 pr-10 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                         required
                         minLength={6}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -220,36 +206,35 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                  className="w-full h-10"
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      {mode === "login" && "Sign In"}
-                      {mode === "signup" && "Create Account"}
-                      {mode === "reset" && "Send Reset Link"}
+                      {mode === "login" && "Sign in"}
+                      {mode === "signup" && "Create account"}
+                      {mode === "reset" && "Send reset link"}
                     </>
                   )}
                 </Button>
               </form>
 
-              {/* Footer Links */}
-              <div className="text-center text-sm text-slate-400 space-y-2 pt-2">
+              <div className="text-center text-sm text-muted-foreground space-y-1.5 pt-1">
                 {mode === "login" && (
                   <>
                     <button
                       onClick={() => setMode("reset")}
-                      className="hover:text-indigo-400 transition-colors"
+                      className="hover:text-foreground transition-colors block mx-auto"
                     >
                       Forgot password?
                     </button>
                     <p>
-                      Don&apos;t have an account?{" "}
+                      No account?{" "}
                       <button
                         onClick={() => setMode("signup")}
-                        className="text-indigo-400 hover:text-indigo-300 font-medium"
+                        className="text-primary hover:text-primary/80 font-medium"
                       >
                         Sign up
                       </button>
@@ -261,7 +246,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
                     Already have an account?{" "}
                     <button
                       onClick={() => setMode("login")}
-                      className="text-indigo-400 hover:text-indigo-300 font-medium"
+                      className="text-primary hover:text-primary/80 font-medium"
                     >
                       Sign in
                     </button>
@@ -270,7 +255,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = "login" }: AuthModalP
                 {mode === "reset" && (
                   <button
                     onClick={() => setMode("login")}
-                    className="text-indigo-400 hover:text-indigo-300 font-medium"
+                    className="text-primary hover:text-primary/80 font-medium"
                   >
                     Back to sign in
                   </button>

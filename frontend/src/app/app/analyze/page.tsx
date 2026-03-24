@@ -14,7 +14,6 @@ import ReactFlow, {
 import "reactflow/dist/style.css"
 import dagre from "dagre"
 import {
-  Sparkles,
   ArrowRight,
   Loader2,
   BookOpen,
@@ -27,6 +26,10 @@ import {
   BarChart3,
   HelpCircle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  PanelBottomOpen,
+  PanelBottomClose,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -131,6 +134,8 @@ export default function AnalyzePage() {
   const [history, setHistory] = useState<Analysis[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
   const [sidePanel, setSidePanel] = useState<"stats" | "history">("stats")
+  const [showDrawer, setShowDrawer] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
   const [achievementToast, setAchievementToast] = useState<{
     show: boolean
     type: "achievement" | "level_up" | "streak" | "xp"
@@ -281,7 +286,7 @@ export default function AnalyzePage() {
           type: "default",
           animated: false,
           markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+          style: { stroke: "var(--primary)", strokeWidth: 1.5 },
         }))
 
       const layoutedNodes = applyLayout(layoutMode, rawNodes, rawEdges)
@@ -289,6 +294,7 @@ export default function AnalyzePage() {
       setEdges(rawEdges)
       setCurrentAnalysis(response)
       addRecentAnalysis(response)
+      setShowDrawer(true)
 
       if (user) {
         try {
@@ -318,7 +324,7 @@ export default function AnalyzePage() {
               updatedGoal.completed === updatedGoal.target
             ) {
               await addXP(user.id, XP_REWARDS.COMPLETE_DAILY_GOAL)
-              toast.success("🎯 Daily goal achieved! +50 XP")
+              toast.success("Daily goal achieved! +50 XP")
             }
           }
 
@@ -385,12 +391,14 @@ export default function AnalyzePage() {
         label: token.deprel,
         type: "default",
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+        style: { stroke: "var(--primary)", strokeWidth: 1.5 },
       }))
 
     const layoutedNodes = applyLayout(layoutMode, rawNodes, rawEdges)
     setNodes(layoutedNodes)
     setEdges(rawEdges)
+    setShowDrawer(true)
+    setShowSidebar(false)
   }
 
   const handleToggleFavorite = async (id: string, isFavorite: boolean) => {
@@ -417,10 +425,10 @@ export default function AnalyzePage() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-950 text-foreground">
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
         <AppNavbar />
         <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </main>
       </div>
     )
@@ -430,9 +438,10 @@ export default function AnalyzePage() {
     return null
   }
 
+  const hasResults = pedagogicalData || difficultyInfo || grammarErrors.length > 0
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-foreground relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none opacity-20" />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <AppNavbar />
 
       <AchievementToast
@@ -444,367 +453,349 @@ export default function AnalyzePage() {
         onClose={() => setAchievementToast((prev) => ({ ...prev, show: false }))}
       />
 
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden h-[calc(100vh-3.5rem)] relative z-10">
-        <div className="w-full md:w-1/3 lg:w-1/4 border-r border-border p-6 flex flex-col gap-6 overflow-y-auto bg-slate-900/50 backdrop-blur-sm z-20 shadow-xl">
-          <div className="flex gap-2 p-1 bg-slate-800/50 rounded-lg">
-            <button
-              onClick={() => setSidePanel("stats")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 text-sm rounded-md transition-colors",
-                sidePanel === "stats"
-                  ? "bg-slate-700 text-white"
-                  : "text-slate-400 hover:text-white"
-              )}
-            >
-              <BarChart3 className="w-4 h-4" />
-              Stats
-            </button>
-            <button
-              onClick={() => setSidePanel("history")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 text-sm rounded-md transition-colors",
-                sidePanel === "history"
-                  ? "bg-slate-700 text-white"
-                  : "text-slate-400 hover:text-white"
-              )}
-            >
-              <History className="w-4 h-4" />
-              History
-            </button>
-          </div>
+      <main className="flex-1 flex flex-col overflow-hidden h-[calc(100vh-3.5rem)]">
+        {/* Top input bar */}
+        <div className="border-b border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-3 max-w-screen-xl mx-auto">
+            <Select value={selectedLang} onValueChange={setSelectedLang}>
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="it">🇮🇹 Italian</SelectItem>
+                  <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+                  <SelectItem value="de">🇩🇪 German</SelectItem>
+                  <SelectItem value="ru">🇷🇺 Russian</SelectItem>
+                  <SelectItem value="tr">🇹🇷 Turkish</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          {sidePanel === "stats" && (
-            <StatsPanel dailyGoal={dailyGoal} />
-          )}
-          {sidePanel === "history" && (
-            <HistoryPanel
-              analyses={history}
-              onSelect={handleSelectFromHistory}
-              onToggleFavorite={handleToggleFavorite}
-              onDelete={handleDeleteAnalysis}
-              loading={historyLoading}
-            />
-          )}
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-500" />
-              Analyze
-            </h2>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Language</label>
-              <Select value={selectedLang} onValueChange={setSelectedLang}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="it">🇮🇹 Italian</SelectItem>
-                    <SelectItem value="es">🇪🇸 Spanish</SelectItem>
-                    <SelectItem value="de">🇩🇪 German</SelectItem>
-                    <SelectItem value="ru">🇷🇺 Russian</SelectItem>
-                    <SelectItem value="tr">🇹🇷 Turkish</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Sentence</label>
-                <button
-                  onClick={handleSpeak}
-                  className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                  title="Listen"
-                >
-                  <Volume2 className="w-4 h-4" />
-                </button>
-              </div>
-              <textarea
-                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Enter text to analyze..."
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="Enter a sentence to analyze..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
               />
-              <p className="text-xs text-muted-foreground">
-                Beta access: Unlimited analyses 🎉
-              </p>
             </div>
 
-            <Button onClick={handleAnalyze} disabled={loading} className="w-full">
+            <button
+              onClick={handleSpeak}
+              className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title="Listen"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
+
+            <Button onClick={handleAnalyze} disabled={loading} size="sm" className="h-9">
               {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <ArrowRight className="mr-2 h-4 w-4" />
+                <>
+                  Analyze
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </>
               )}
-              Analyze
             </Button>
+
+            <div className="w-px h-6 bg-border mx-1" />
+
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className={cn(
+                "p-2 rounded-md transition-colors",
+                showSidebar ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+              title="Stats & History"
+            >
+              <History className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden relative">
+          {/* Graph canvas */}
+          <div className="flex-1 relative">
+            {nodes.length > 0 && (
+              <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-card/90 backdrop-blur-sm p-1 rounded-lg border border-border shadow-sm">
+                <Toggle
+                  aria-label="Toggle Draggable"
+                  pressed={isDraggable}
+                  onPressedChange={toggleDraggable}
+                  className="h-7 w-7 p-0 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+                >
+                  <Move className="h-3.5 w-3.5" />
+                </Toggle>
+                <div className="w-px h-4 bg-border" />
+                <ToggleGroup
+                  type="single"
+                  value={layoutMode}
+                  onValueChange={handleLayoutChange}
+                >
+                  <ToggleGroupItem
+                    value="linear"
+                    aria-label="Linear View"
+                    className="h-7 px-2 text-xs"
+                  >
+                    <AlignCenter className="w-3.5 h-3.5 mr-1" />
+                    Sentence
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="tree"
+                    aria-label="Tree View"
+                    className="h-7 px-2 text-xs"
+                  >
+                    <GitBranch className="w-3.5 h-3.5 mr-1" />
+                    Tree
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            )}
+
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              fitView
+              minZoom={0.5}
+              maxZoom={2}
+              className="bg-background"
+              proOptions={{ hideAttribution: true }}
+            >
+              <Controls
+                showInteractive={false}
+                className="!bg-card !border-border !shadow-sm [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-accent"
+              />
+            </ReactFlow>
+
+            {nodes.length === 0 && !loading && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center space-y-2 p-6">
+                  <p className="text-muted-foreground">
+                    Enter a sentence above and press Analyze to visualize its structure.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Beta access: Unlimited analyses
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {difficultyInfo && (
-            <div className="border-t border-border pt-4 animate-accordion-down">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-400">Difficulty Level</span>
-                <div className="flex items-center gap-2">
+          {/* Right sidebar (stats/history) */}
+          {showSidebar && (
+            <div className="w-72 border-l border-border bg-card overflow-y-auto p-4 space-y-4">
+              <div className="flex gap-1 p-0.5 bg-surface-2 rounded-md">
+                <button
+                  onClick={() => setSidePanel("stats")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs rounded-md transition-colors",
+                    sidePanel === "stats"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  Stats
+                </button>
+                <button
+                  onClick={() => setSidePanel("history")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs rounded-md transition-colors",
+                    sidePanel === "history"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <History className="w-3.5 h-3.5" />
+                  History
+                </button>
+              </div>
+
+              {sidePanel === "stats" && (
+                <StatsPanel dailyGoal={dailyGoal} />
+              )}
+              {sidePanel === "history" && (
+                <HistoryPanel
+                  analyses={history}
+                  onSelect={handleSelectFromHistory}
+                  onToggleFavorite={handleToggleFavorite}
+                  onDelete={handleDeleteAnalysis}
+                  loading={historyLoading}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom drawer for pedagogical content */}
+        {hasResults && (
+          <div className={cn(
+            "border-t border-border bg-card transition-all duration-300",
+            showDrawer ? "max-h-[45vh]" : "max-h-10"
+          )} style={{ transitionTimingFunction: "var(--ease-out-quart)" }}>
+            <button
+              onClick={() => setShowDrawer(!showDrawer)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors"
+            >
+              <span className="font-medium flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                Analysis details
+                {difficultyInfo && (
                   <span className={cn(
-                    "px-2.5 py-1 rounded-md text-sm font-bold border",
-                    difficultyInfo.level === "A1" && "bg-emerald-500/20 border-emerald-500/30 text-emerald-300",
-                    difficultyInfo.level === "A2" && "bg-green-500/20 border-green-500/30 text-green-300",
-                    difficultyInfo.level === "B1" && "bg-yellow-500/20 border-yellow-500/30 text-yellow-300",
-                    difficultyInfo.level === "B2" && "bg-orange-500/20 border-orange-500/30 text-orange-300",
-                    difficultyInfo.level === "C1" && "bg-red-500/20 border-red-500/30 text-red-300",
-                    difficultyInfo.level === "C2" && "bg-purple-500/20 border-purple-500/30 text-purple-300",
+                    "px-1.5 py-0.5 rounded text-xs font-mono",
+                    difficultyInfo.level === "A1" || difficultyInfo.level === "A2" ? "bg-success-light text-success" :
+                    difficultyInfo.level === "B1" || difficultyInfo.level === "B2" ? "bg-warning-light text-warning" :
+                    "bg-error-light text-error"
                   )}>
                     {difficultyInfo.level}
                   </span>
-                  <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500 rounded-full transition-all"
-                      style={{ width: `${difficultyInfo.score * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {grammarErrors.length > 0 && (
-            <div className="space-y-3 border-t border-border pt-4 animate-accordion-down">
-              <h3 className="font-semibold text-sm flex items-center gap-2 text-red-400">
-                <HelpCircle className="w-4 h-4" />
-                Grammar Issues Detected
-              </h3>
-              {grammarErrors.map((err, i) => (
-                <div key={i} className="rounded-lg border border-red-500/20 bg-red-950/10 p-2.5 text-xs">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-red-300 bg-red-900/30 px-1.5 py-0.5 rounded">
-                      {err.word}
-                    </span>
-                    <span className="text-red-400/70 uppercase text-[10px]">{err.error_type}</span>
-                  </div>
-                  <p className="text-slate-300">{err.message}</p>
-                  {err.rule && <p className="text-slate-500 italic mt-1">{err.rule}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {pedagogicalData && (
-            <div className="space-y-4 border-t border-border pt-6 animate-accordion-down">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-emerald-500" />
-                Teacher&apos;s Notes
-              </h3>
-
-              <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/20 p-4 space-y-3">
-                <div>
-                  <p className="text-xs text-emerald-400 font-semibold mb-1">
-                    TRANSLATION
-                  </p>
-                  <p className="text-sm italic text-slate-200">
-                    &quot;{pedagogicalData.translation}&quot;
-                  </p>
-                </div>
-
-                {pedagogicalData.nuance && (
-                  <div>
-                    <p className="text-xs text-emerald-400 font-semibold mb-1">
-                      NUANCE
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      {pedagogicalData.nuance}
-                    </p>
-                  </div>
                 )}
-              </div>
+                {grammarErrors.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded text-xs bg-error-light text-error">
+                    {grammarErrors.length} issue{grammarErrors.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </span>
+              {showDrawer ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </button>
 
-              <div className="space-y-3">
-                {pedagogicalData.concepts.map((concept, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-border bg-background/50 p-3 text-sm"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Lightbulb className="w-3 h-3 text-yellow-400" />
-                      <span className="font-semibold text-indigo-300">
-                        {concept.name}
-                      </span>
+            {showDrawer && (
+              <div className="overflow-y-auto max-h-[calc(45vh-2.5rem)] px-4 pb-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-screen-xl mx-auto">
+                  {/* Translation & difficulty */}
+                  {pedagogicalData && (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Translation</p>
+                        <p className="text-sm italic">&ldquo;{pedagogicalData.translation}&rdquo;</p>
+                      </div>
+                      {pedagogicalData.nuance && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Nuance</p>
+                          <p className="text-sm text-muted-foreground">{pedagogicalData.nuance}</p>
+                        </div>
+                      )}
+                      {difficultyInfo && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Difficulty</p>
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "px-2 py-1 rounded text-sm font-medium",
+                              difficultyInfo.level === "A1" || difficultyInfo.level === "A2" ? "bg-success-light text-success" :
+                              difficultyInfo.level === "B1" || difficultyInfo.level === "B2" ? "bg-warning-light text-warning" :
+                              "bg-error-light text-error"
+                            )}>
+                              {difficultyInfo.level}
+                            </span>
+                            <div className="w-20 h-1.5 bg-surface-3 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full transition-all"
+                                style={{ width: `${difficultyInfo.score * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-slate-300 text-xs mb-2 leading-relaxed">
-                      {concept.description}
-                    </p>
-                    {concept.related_words.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {concept.related_words.map((word, j) => (
-                          <span
-                            key={j}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700"
-                          >
-                            {word}
-                          </span>
+                  )}
+
+                  {/* Grammar concepts */}
+                  {pedagogicalData && pedagogicalData.concepts.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Key concepts</p>
+                      {pedagogicalData.concepts.map((concept, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Lightbulb className="w-3 h-3 text-primary" />
+                            <span className="text-sm font-medium">{concept.name}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{concept.description}</p>
+                          {concept.related_words.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {concept.related_words.map((word, j) => (
+                                <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-surface-2 text-muted-foreground">
+                                  {word}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tips & errors column */}
+                  <div className="space-y-4">
+                    {grammarErrors.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-error uppercase tracking-wider flex items-center gap-1.5">
+                          <HelpCircle className="w-3 h-3" />
+                          Grammar issues
+                        </p>
+                        {grammarErrors.map((err, i) => (
+                          <div key={i} className="rounded-md bg-error-light p-2.5 text-xs space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-error bg-background px-1.5 py-0.5 rounded">{err.word}</span>
+                              <span className="text-muted-foreground uppercase text-[10px]">{err.error_type}</span>
+                            </div>
+                            <p className="text-foreground">{err.message}</p>
+                            {err.rule && <p className="text-muted-foreground italic">{err.rule}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {pedagogicalData?.tips && pedagogicalData.tips.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Why is it this way?</p>
+                        {pedagogicalData.tips.map((tip, i) => (
+                          <div key={i} className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <ChevronRight className="w-3 h-3 text-primary shrink-0" />
+                              <span className="font-mono text-primary bg-primary/5 px-1 rounded">{tip.word}</span>
+                              <span className="font-medium">{tip.question}</span>
+                            </div>
+                            <p className="text-muted-foreground pl-5 leading-relaxed">{tip.explanation}</p>
+                            {tip.rule && (
+                              <p className="text-muted-foreground pl-5 italic">{tip.rule}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {pedagogicalData?.errors && pedagogicalData.errors.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-error uppercase tracking-wider">AI corrections</p>
+                        {pedagogicalData.errors.map((err, i) => (
+                          <div key={i} className="rounded-md bg-error-light p-2.5 text-xs space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-error line-through">{err.word}</span>
+                              {err.correction && (
+                                <>
+                                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                                  <span className="font-mono text-success">{err.correction}</span>
+                                </>
+                              )}
+                            </div>
+                            <p className="text-foreground">{err.explanation}</p>
+                          </div>
                         ))}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-
-            </div>
-          )}
-
-          {pedagogicalData?.tips && pedagogicalData.tips.length > 0 && (
-            <div className="space-y-4 border-t border-border pt-6 animate-accordion-down">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-amber-400" />
-                Why is it this way?
-              </h3>
-              <div className="space-y-3">
-                {pedagogicalData.tips.map((tip, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 text-sm"
-                  >
-                    <div className="flex items-start gap-2 mb-2">
-                      <ChevronRight className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-mono text-amber-300 bg-amber-900/30 px-1.5 py-0.5 rounded text-xs">
-                          {tip.word}
-                        </span>
-                        <p className="text-slate-200 text-xs mt-1 font-medium">
-                          {tip.question}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-slate-300 text-xs leading-relaxed pl-6">
-                      {tip.explanation}
-                    </p>
-                    {tip.rule && (
-                      <div className="mt-2 pl-6">
-                        <p className="text-[10px] text-amber-400/80 font-semibold uppercase tracking-wide">
-                          Rule
-                        </p>
-                        <p className="text-slate-400 text-xs italic">
-                          {tip.rule}
-                        </p>
-                      </div>
-                    )}
-                    {tip.examples && tip.examples.length > 0 && (
-                      <div className="mt-2 pl-6">
-                        <p className="text-[10px] text-amber-400/80 font-semibold uppercase tracking-wide mb-1">
-                          More Examples
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {tip.examples.map((ex, j) => (
-                            <span
-                              key={j}
-                              className="text-[10px] px-2 py-1 rounded bg-slate-800/50 text-slate-300 border border-slate-700"
-                            >
-                              {ex}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {pedagogicalData?.errors && pedagogicalData.errors.length > 0 && (
-            <div className="space-y-3 border-t border-border pt-6 animate-accordion-down">
-              <h3 className="font-semibold text-sm flex items-center gap-2 text-red-400">
-                <Sparkles className="w-4 h-4" />
-                AI-Detected Corrections
-              </h3>
-              {pedagogicalData.errors.map((err, i) => (
-                <div key={i} className="rounded-lg border border-red-500/20 bg-red-950/10 p-3 text-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-mono text-red-300 bg-red-900/30 px-1.5 py-0.5 rounded text-xs line-through">
-                      {err.word}
-                    </span>
-                    {err.correction && (
-                      <>
-                        <ChevronRight className="w-3 h-3 text-slate-500" />
-                        <span className="font-mono text-emerald-300 bg-emerald-900/30 px-1.5 py-0.5 rounded text-xs">
-                          {err.correction}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-slate-300 text-xs">{err.explanation}</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 bg-slate-950 relative flex flex-col">
-          {nodes.length > 0 && (
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-slate-900/80 p-1 rounded-lg border border-border backdrop-blur-sm">
-              <Toggle
-                aria-label="Toggle Draggable"
-                pressed={isDraggable}
-                onPressedChange={toggleDraggable}
-                className="h-8 w-8 p-0 data-[state=on]:bg-indigo-500/20 data-[state=on]:text-indigo-400"
-              >
-                <Move className="h-4 w-4" />
-              </Toggle>
-              <div className="w-px h-4 bg-border mx-1" />
-              <ToggleGroup
-                type="single"
-                value={layoutMode}
-                onValueChange={handleLayoutChange}
-              >
-                <ToggleGroupItem
-                  value="linear"
-                  aria-label="Linear View"
-                  className="h-8 px-2 text-xs"
-                >
-                  <AlignCenter className="w-4 h-4 mr-1" />
-                  Sentence
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="tree"
-                  aria-label="Tree View"
-                  className="h-8 px-2 text-xs"
-                >
-                  <GitBranch className="w-4 h-4 mr-1" />
-                  Tree
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          )}
-
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            fitView
-            minZoom={0.5}
-            maxZoom={2}
-            className="bg-slate-950"
-            proOptions={{ hideAttribution: true }}
-          >
-            <Controls
-              showInteractive={false}
-              className="bg-background border-border fill-foreground text-foreground"
-            />
-          </ReactFlow>
-
-          {nodes.length === 0 && !loading && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center space-y-2 p-6 rounded-xl bg-background/80 backdrop-blur border border-border">
-                <p className="text-muted-foreground">
-                  Enter a sentence and click Analyze to visualize.
-                </p>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )

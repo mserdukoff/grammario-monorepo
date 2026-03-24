@@ -91,16 +91,16 @@ export default function AuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="text-center p-8 bg-slate-900 rounded-lg border border-red-500/30 max-w-md">
-          <h1 className="text-xl font-bold text-red-400 mb-2">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center p-8 bg-card rounded-lg border border-error/30 max-w-md">
+          <h1 className="text-xl font-bold text-error mb-2">
             Authentication Error
           </h1>
-          <p className="text-slate-400 mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => router.push("/")}
-              className="px-4 py-2 bg-slate-800 rounded hover:bg-slate-700 transition"
+              className="px-4 py-2 bg-muted rounded hover:bg-accent transition"
             >
               Return Home
             </button>
@@ -108,7 +108,7 @@ export default function AuthCallback() {
               onClick={() => {
                 window.location.href = "/"
               }}
-              className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-500 transition"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition"
             >
               Try Again
             </button>
@@ -119,10 +119,10 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-        <p className="text-slate-400">{status}</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">{status}</p>
       </div>
     </div>
   )
