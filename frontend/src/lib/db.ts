@@ -5,7 +5,7 @@
  */
 import { getSupabaseClient as getClient } from "./supabase/client"
 import type { AnalysisResponse } from "./api"
-import type { Analysis, Vocabulary, DailyGoal, Achievement, UserAchievement } from "./supabase/database.types"
+import type { Analysis, Vocabulary, DailyGoal, Achievement, UserAchievement, SentenceFeedback, FeedbackCategory } from "./supabase/database.types"
 
 // Helper to get typed supabase client
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -432,4 +432,72 @@ export async function unlockAchievement(userId: string, achievementId: string): 
 
   if (error) throw error
   return true // Newly unlocked
+}
+
+// === SENTENCE FEEDBACK ===
+
+export async function submitFeedback(
+  userId: string,
+  analysisId: string,
+  rating: number,
+  category: FeedbackCategory,
+  sentenceText: string,
+  language: string,
+  comment?: string
+): Promise<string> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("sentence_feedback")
+    .insert({
+      user_id: userId,
+      analysis_id: analysisId,
+      rating,
+      category,
+      comment: comment || null,
+      sentence_text: sentenceText,
+      language,
+    })
+    .select("id")
+    .single()
+
+  if (error) throw error
+  return data.id
+}
+
+export async function getUserFeedback(userId: string): Promise<SentenceFeedback[]> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("sentence_feedback")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+  return data || []
+}
+
+export async function getAnalysisFeedback(analysisId: string): Promise<SentenceFeedback[]> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("sentence_feedback")
+    .select("*")
+    .eq("analysis_id", analysisId)
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+  return data || []
+}
+
+export async function deleteFeedback(feedbackId: string) {
+  const supabase = getSupabaseClient()
+
+  const { error } = await supabase
+    .from("sentence_feedback")
+    .delete()
+    .eq("id", feedbackId)
+
+  if (error) throw error
 }

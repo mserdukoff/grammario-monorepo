@@ -248,6 +248,50 @@ export interface Database {
           unlocked_at?: string
         }
       }
+      sentence_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          analysis_id: string
+          rating: number
+          category: "accuracy" | "translation" | "grammar_tips" | "difficulty" | "other"
+          comment: string | null
+          sentence_text: string
+          language: string
+          is_resolved: boolean
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          analysis_id: string
+          rating: number
+          category: "accuracy" | "translation" | "grammar_tips" | "difficulty" | "other"
+          comment?: string | null
+          sentence_text: string
+          language: string
+          is_resolved?: boolean
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          analysis_id?: string
+          rating?: number
+          category?: "accuracy" | "translation" | "grammar_tips" | "difficulty" | "other"
+          comment?: string | null
+          sentence_text?: string
+          language?: string
+          is_resolved?: boolean
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -268,3 +312,5 @@ export type Vocabulary = Database["public"]["Tables"]["vocabulary"]["Row"]
 export type DailyGoal = Database["public"]["Tables"]["daily_goals"]["Row"]
 export type Achievement = Database["public"]["Tables"]["achievements"]["Row"]
 export type UserAchievement = Database["public"]["Tables"]["user_achievements"]["Row"]
+export type SentenceFeedback = Database["public"]["Tables"]["sentence_feedback"]["Row"]
+export type FeedbackCategory = Database["public"]["Tables"]["sentence_feedback"]["Row"]["category"]

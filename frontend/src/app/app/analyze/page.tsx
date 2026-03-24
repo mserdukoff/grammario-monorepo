@@ -29,6 +29,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  MessageSquarePlus,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -66,6 +67,7 @@ import {
   XP_REWARDS,
 } from "@/lib/db"
 import type { Analysis, DailyGoal } from "@/lib/supabase/database.types"
+import { FeedbackForm } from "@/components/feedback/feedback-form"
 import { cn } from "@/lib/utils"
 
 const nodeTypes = {
@@ -143,6 +145,9 @@ export default function AnalyzePage() {
     uposLabel?: string
     uposDescription?: string
   } | null>(null)
+
+  const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null)
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
 
   const [achievementToast, setAchievementToast] = useState<{
     show: boolean
@@ -324,7 +329,9 @@ export default function AnalyzePage() {
 
       if (user) {
         try {
-          await saveAnalysis(user.id, response)
+          const savedId = await saveAnalysis(user.id, response)
+          setCurrentAnalysisId(savedId)
+          setShowFeedbackForm(false)
           await incrementTotalAnalyses(user.id)
 
           const xpResult = await addXP(user.id, XP_REWARDS.ANALYSIS)
@@ -387,6 +394,8 @@ export default function AnalyzePage() {
   const handleSelectFromHistory = (analysis: Analysis) => {
     setInputText(analysis.text)
     setSelectedLang(analysis.language)
+    setCurrentAnalysisId(analysis.id)
+    setShowFeedbackForm(false)
     const nodeData = analysis.nodes as unknown as AnalysisResponse["nodes"]
     const pedData = analysis.pedagogical_data as unknown as AnalysisResponse["pedagogical_data"]
 
@@ -750,34 +759,66 @@ export default function AnalyzePage() {
             "border-t border-border bg-card transition-all duration-300",
             showDrawer ? "max-h-[45vh]" : "max-h-10"
           )} style={{ transitionTimingFunction: "var(--ease-out-quart)" }}>
-            <button
-              onClick={() => setShowDrawer(!showDrawer)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors"
-            >
-              <span className="font-medium flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-primary" />
-                Analysis details
-                {difficultyInfo && (
-                  <span className={cn(
-                    "px-1.5 py-0.5 rounded text-xs font-mono",
-                    difficultyInfo.level === "A1" || difficultyInfo.level === "A2" ? "bg-success-light text-success" :
-                    difficultyInfo.level === "B1" || difficultyInfo.level === "B2" ? "bg-warning-light text-warning" :
-                    "bg-error-light text-error"
-                  )}>
-                    {difficultyInfo.level}
-                  </span>
-                )}
-                {grammarErrors.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded text-xs bg-error-light text-error">
-                    {grammarErrors.length} issue{grammarErrors.length !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </span>
-              {showDrawer ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center">
+              <button
+                onClick={() => setShowDrawer(!showDrawer)}
+                className="flex-1 flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors"
+              >
+                <span className="font-medium flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  Analysis details
+                  {difficultyInfo && (
+                    <span className={cn(
+                      "px-1.5 py-0.5 rounded text-xs font-mono",
+                      difficultyInfo.level === "A1" || difficultyInfo.level === "A2" ? "bg-success-light text-success" :
+                      difficultyInfo.level === "B1" || difficultyInfo.level === "B2" ? "bg-warning-light text-warning" :
+                      "bg-error-light text-error"
+                    )}>
+                      {difficultyInfo.level}
+                    </span>
+                  )}
+                  {grammarErrors.length > 0 && (
+                    <span className="px-1.5 py-0.5 rounded text-xs bg-error-light text-error">
+                      {grammarErrors.length} issue{grammarErrors.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </span>
+                {showDrawer ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+              {currentAnalysisId && user && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowFeedbackForm(!showFeedbackForm)
+                    if (!showDrawer) setShowDrawer(true)
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 mr-3 rounded-md text-xs font-medium transition-colors border",
+                    showFeedbackForm
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground hover:border-primary/50"
+                  )}
+                  title="Give feedback on this analysis"
+                >
+                  <MessageSquarePlus className="w-3.5 h-3.5" />
+                  Feedback
+                </button>
+              )}
+            </div>
 
             {showDrawer && (
               <div className="overflow-y-auto max-h-[calc(45vh-2.5rem)] px-4 pb-4">
+                {showFeedbackForm && currentAnalysisId && user && (
+                  <div className="max-w-md mx-auto mb-4">
+                    <FeedbackForm
+                      userId={user.id}
+                      analysisId={currentAnalysisId}
+                      sentenceText={inputText}
+                      language={selectedLang}
+                      onClose={() => setShowFeedbackForm(false)}
+                    />
+                  </div>
+                )}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-screen-xl mx-auto">
                   {/* Translation & difficulty */}
                   {pedagogicalData && (

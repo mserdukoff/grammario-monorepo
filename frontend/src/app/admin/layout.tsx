@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   Shield, LayoutDashboard, Users, Database, Server,
-  BookOpen, ChevronLeft, LogOut, Sparkles,
+  BookOpen, ChevronLeft, LogOut, Sparkles, MessageSquare,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { isAdmin } from "@/lib/admin"
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/requests", label: "Requests & Data", icon: Database },
   { href: "/admin/vocabulary", label: "Vocabulary", icon: BookOpen },
+  { href: "/admin/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/admin/backend", label: "Backend", icon: Server },
 ]
 

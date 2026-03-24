@@ -164,6 +164,32 @@ CREATE TABLE IF NOT EXISTS public.user_achievements (
 );
 
 -- =============================================================================
+-- SENTENCE FEEDBACK TABLE
+-- =============================================================================
+-- Users can submit feedback on specific sentence analyses
+
+CREATE TABLE IF NOT EXISTS public.sentence_feedback (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    analysis_id UUID NOT NULL REFERENCES public.analyses(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    category TEXT NOT NULL CHECK (category IN ('accuracy', 'translation', 'grammar_tips', 'difficulty', 'other')),
+    comment TEXT,
+    sentence_text TEXT NOT NULL,
+    language TEXT NOT NULL,
+    is_resolved BOOLEAN DEFAULT FALSE,
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_feedback_user ON public.sentence_feedback(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_analysis ON public.sentence_feedback(analysis_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_category ON public.sentence_feedback(category);
+CREATE INDEX IF NOT EXISTS idx_feedback_unresolved ON public.sentence_feedback(is_resolved) WHERE is_resolved = FALSE;
+
+-- =============================================================================
 -- ROW LEVEL SECURITY (RLS)
 -- =============================================================================
 -- Users can only access their own data
@@ -226,6 +252,21 @@ CREATE POLICY "Users can view own achievements" ON public.user_achievements
 
 CREATE POLICY "Users can insert own achievements" ON public.user_achievements
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Sentence feedback table policies
+ALTER TABLE public.sentence_feedback ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own feedback" ON public.sentence_feedback
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own feedback" ON public.sentence_feedback
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own feedback" ON public.sentence_feedback
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own feedback" ON public.sentence_feedback
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- Achievements are readable by everyone (they're static definitions)
 ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
@@ -311,6 +352,13 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON public.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at();
+
+-- Trigger for sentence_feedback table
+DROP TRIGGER IF EXISTS update_sentence_feedback_updated_at ON public.sentence_feedback;
+CREATE TRIGGER update_sentence_feedback_updated_at
+    BEFORE UPDATE ON public.sentence_feedback
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at();
 
