@@ -24,9 +24,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Grammario - Visual Grammar for Deep Learners",
-  description:
-    "Deconstruct sentences with linguistic analysis. Master grammar in Italian, Spanish, German, Russian, and Turkish through interactive visualizations.",
+  title: "Grammario",
+  description: "See how language actually works.",
   keywords: [
     "language learning",
     "grammar",
@@ -40,20 +39,20 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Grammario" }],
   icons: {
-    icon: "/G Logo Max.png",
-    shortcut: "/G Logo Max.png",
-    apple: "/G Logo Max.png",
+    icon: "/logo-g.svg",
+    shortcut: "/logo-g.svg",
+    apple: "/logo-g.svg",
   },
   openGraph: {
-    title: "Grammario - Visual Grammar for Deep Learners",
-    description: "Deconstruct sentences with linguistic analysis.",
+    title: "Grammario",
+    description: "See how language actually works.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Grammario - Visual Grammar for Deep Learners",
-    description: "Deconstruct sentences with linguistic analysis.",
+    title: "Grammario",
+    description: "See how language actually works.",
   },
 }
 
