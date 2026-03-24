@@ -52,7 +52,7 @@ import { AchievementToast } from "@/components/gamification/achievement-toast"
 import { useAuth } from "@/lib/auth-context"
 import { useAppStore } from "@/store/useAppStore"
 import { analyzeText, type AnalysisResponse, type DifficultyInfo, type RuleBasedError } from "@/lib/api"
-import { getFeatureInfo, getUposInfo, humanizeFeature, getCategoryLabel, type GrammarFeatureInfo } from "@/lib/grammar-features"
+import { getFeatureInfo, getFeatureExample, getUposInfo, humanizeFeature, getCategoryLabel, type GrammarFeatureInfo } from "@/lib/grammar-features"
 import {
   saveAnalysis,
   getRecentAnalyses,
@@ -658,12 +658,15 @@ export default function AnalyzePage() {
                       </p>
                     </div>
 
-                    {featureDetail.info.example && (
-                      <div className="rounded-lg bg-surface-2 p-3 space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example</p>
-                        <p className="text-sm italic">{featureDetail.info.example}</p>
-                      </div>
-                    )}
+                    {(() => {
+                      const example = getFeatureExample(featureDetail.info, selectedLang)
+                      return example ? (
+                        <div className="rounded-lg bg-surface-2 p-3 space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example</p>
+                          <p className="text-sm italic">{example}</p>
+                        </div>
+                      ) : null
+                    })()}
 
                     {featureDetail.info.tip && (
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">

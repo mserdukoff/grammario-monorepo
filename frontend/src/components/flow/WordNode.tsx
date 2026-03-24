@@ -71,7 +71,7 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
           className="mt-0.5 text-[10px] font-mono tracking-wider uppercase text-muted-foreground hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
           title={uposInfo ? `${uposInfo.label} — click to learn more` : data.upos}
         >
-          {uposInfo ? uposInfo.label : data.upos}
+          {data.upos}
         </button>
 
         {data.segments && (
@@ -105,18 +105,18 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
         />
       </div>
 
-      {/* Morphology details on select */}
+      {/* Morphology details on select — allowed to grow wider than the card */}
       <div
         className={cn(
-          "absolute top-full left-0 right-0 pt-1 transition-all duration-200 origin-top",
+          "absolute top-full left-1/2 -translate-x-1/2 pt-1 transition-all duration-200 origin-top",
           selected
             ? "opacity-100 translate-y-0 z-20 pointer-events-auto"
             : "opacity-0 -translate-y-2 pointer-events-none z-0"
         )}
-        style={{ transitionTimingFunction: "var(--ease-out-quart)" }}
+        style={{ transitionTimingFunction: "var(--ease-out-quart)", minWidth: "220px" }}
       >
         {data.feats && (
-          <div className="rounded-lg border border-border bg-card p-2.5 shadow-sm flex flex-col items-center gap-1.5">
+          <div className="rounded-lg border border-border bg-card p-2.5 shadow-sm flex flex-col items-center gap-1.5 w-max max-w-[320px]">
             <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
               Morphology
             </div>
