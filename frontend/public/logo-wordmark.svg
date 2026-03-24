@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 60" fill="none">
+  <style>
+    @font-face {
+      font-family: 'Instrument Serif';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/instrumentserif/v4/jizBRFtNs2ka5fCjHQ3FuZS8942w9OrTS3I.woff2) format('woff2');
+    }
+  </style>
+  <text
+    x="0"
+    y="46"
+    font-family="'Instrument Serif', Georgia, serif"
+    font-size="48"
+    font-style="italic"
+    font-weight="400"
+    fill="#1C1917"
+    letter-spacing="-0.5"
+  >Grammario</text>
+</svg>

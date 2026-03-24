@@ -37,8 +37,8 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
         <div className="container flex h-14 max-w-screen-xl items-center">
-          <Link href="/" className="mr-8 flex items-center gap-2.5">
-            <span className="font-heading text-xl italic tracking-tight text-foreground">Grammario</span>
+          <Link href="/" className="mr-8 flex items-center">
+            <img src="/logo-wordmark.svg" alt="Grammario" className="h-7" />
           </Link>
 
           <nav className="hidden md:flex flex-1 items-center gap-6 text-sm">

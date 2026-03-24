@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-4">
-              <span className="font-heading text-lg italic tracking-tight">Grammario</span>
+              <img src="/logo-wordmark.svg" alt="Grammario" className="h-6" />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               Visual grammar analysis for the serious language learner.
