@@ -28,8 +28,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  PanelBottomOpen,
-  PanelBottomClose,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -53,6 +52,7 @@ import { AchievementToast } from "@/components/gamification/achievement-toast"
 import { useAuth } from "@/lib/auth-context"
 import { useAppStore } from "@/store/useAppStore"
 import { analyzeText, type AnalysisResponse, type DifficultyInfo, type RuleBasedError } from "@/lib/api"
+import { getFeatureInfo, getUposInfo, humanizeFeature, getCategoryLabel, type GrammarFeatureInfo } from "@/lib/grammar-features"
 import {
   saveAnalysis,
   getRecentAnalyses,
@@ -136,6 +136,14 @@ export default function AnalyzePage() {
   const [sidePanel, setSidePanel] = useState<"stats" | "history">("stats")
   const [showDrawer, setShowDrawer] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
+  const [featureDetail, setFeatureDetail] = useState<{
+    raw: string
+    info: GrammarFeatureInfo | null
+    isUpos: boolean
+    uposLabel?: string
+    uposDescription?: string
+  } | null>(null)
+
   const [achievementToast, setAchievementToast] = useState<{
     show: boolean
     type: "achievement" | "level_up" | "streak" | "xp"
@@ -190,6 +198,22 @@ export default function AnalyzePage() {
     })
     setTimeout(() => setAchievementToast((prev) => ({ ...prev, show: false })), 3000)
   }
+
+  const handleFeatureClick = useCallback((rawFeature: string) => {
+    const info = getFeatureInfo(rawFeature)
+    setFeatureDetail({ raw: rawFeature, info, isUpos: false })
+  }, [])
+
+  const handleUposClick = useCallback((upos: string) => {
+    const uposInfo = getUposInfo(upos)
+    setFeatureDetail({
+      raw: upos,
+      info: null,
+      isUpos: true,
+      uposLabel: uposInfo?.label || upos,
+      uposDescription: uposInfo?.description,
+    })
+  }, [])
 
   const applyLayout = useCallback(
     (mode: "linear" | "tree", currentNodes: Node[], currentEdges: Edge[]) => {
@@ -272,6 +296,8 @@ export default function AnalyzePage() {
             segments: token.segments,
             hasError: !!err,
             errorMessage: err?.message,
+            onFeatureClick: handleFeatureClick,
+            onUposClick: handleUposClick,
           },
         }
       })
@@ -379,6 +405,8 @@ export default function AnalyzePage() {
         upos: token.upos,
         feats: token.feats,
         segments: token.segments,
+        onFeatureClick: handleFeatureClick,
+        onUposClick: handleUposClick,
       },
     }))
 
@@ -587,6 +615,85 @@ export default function AnalyzePage() {
               </div>
             )}
           </div>
+
+          {/* Feature detail panel */}
+          {featureDetail && (
+            <div className="w-80 border-l border-border bg-card overflow-y-auto animate-fade-in-down">
+              <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between z-10">
+                <h3 className="text-sm font-medium">Grammar Reference</h3>
+                <button
+                  onClick={() => setFeatureDetail(null)}
+                  className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-5">
+                {featureDetail.isUpos ? (
+                  <>
+                    <div>
+                      <span className="inline-block px-2 py-1 rounded bg-primary/10 text-primary text-xs font-medium mb-3">
+                        Part of Speech
+                      </span>
+                      <h4 className="font-heading text-xl italic mb-2">{featureDetail.uposLabel}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {featureDetail.uposDescription || "No description available for this part of speech."}
+                      </p>
+                    </div>
+                    <div className="text-xs text-muted-foreground border-t border-border pt-3">
+                      <span className="font-mono bg-surface-2 px-1.5 py-0.5 rounded">{featureDetail.raw}</span>
+                      <span className="ml-2">Universal Dependencies tag</span>
+                    </div>
+                  </>
+                ) : featureDetail.info ? (
+                  <>
+                    <div>
+                      <span className="inline-block px-2 py-1 rounded bg-primary/10 text-primary text-xs font-medium mb-3">
+                        {getCategoryLabel(featureDetail.info.category)}
+                      </span>
+                      <h4 className="font-heading text-xl italic mb-2">{featureDetail.info.label}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {featureDetail.info.description}
+                      </p>
+                    </div>
+
+                    {featureDetail.info.example && (
+                      <div className="rounded-lg bg-surface-2 p-3 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example</p>
+                        <p className="text-sm italic">{featureDetail.info.example}</p>
+                      </div>
+                    )}
+
+                    {featureDetail.info.tip && (
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">
+                        <p className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-1">
+                          <Lightbulb className="w-3 h-3" />
+                          Tip
+                        </p>
+                        <p className="text-sm text-foreground leading-relaxed">{featureDetail.info.tip}</p>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground border-t border-border pt-3">
+                      <span className="font-mono bg-surface-2 px-1.5 py-0.5 rounded">{featureDetail.raw}</span>
+                      <span className="ml-2">Universal Dependencies tag</span>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <span className="inline-block px-2 py-1 rounded bg-surface-2 text-muted-foreground text-xs font-medium mb-3">
+                      Morphological Feature
+                    </span>
+                    <h4 className="font-heading text-xl italic mb-2">{humanizeFeature(featureDetail.raw)}</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Detailed information for this feature is not yet available. The raw tag <span className="font-mono bg-surface-2 px-1 py-0.5 rounded">{featureDetail.raw}</span> comes from the Universal Dependencies annotation scheme.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Right sidebar (stats/history) */}
           {showSidebar && (

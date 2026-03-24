@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Handle, Position } from "reactflow"
 import { cn } from "@/lib/utils"
+import { humanizeFeature, getFeatureInfo, getUposInfo } from "@/lib/grammar-features"
 
 interface NodeData {
   text: string
@@ -10,6 +11,8 @@ interface NodeData {
   segments?: string[]
   hasError?: boolean
   errorMessage?: string
+  onFeatureClick?: (rawFeature: string) => void
+  onUposClick?: (upos: string) => void
 }
 
 const POS_STYLES: Record<string, string> = {
@@ -31,6 +34,7 @@ const POS_STYLES: Record<string, string> = {
 
 export function WordNode({ data, selected }: { data: NodeData; selected: boolean }) {
   const posColor = POS_STYLES[data.upos] || "text-foreground"
+  const uposInfo = getUposInfo(data.upos)
 
   return (
     <div className="relative group">
@@ -59,19 +63,31 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
           {data.text}
         </div>
         <div className="text-xs text-muted-foreground italic">{data.lemma}</div>
-        <div className="mt-0.5 text-[10px] font-mono tracking-wider uppercase text-muted-foreground">
-          {data.upos}
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            data.onUposClick?.(data.upos)
+          }}
+          className="mt-0.5 text-[10px] font-mono tracking-wider uppercase text-muted-foreground hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+          title={uposInfo ? `${uposInfo.label} — click to learn more` : data.upos}
+        >
+          {uposInfo ? uposInfo.label : data.upos}
+        </button>
 
         {data.segments && (
           <div className="mt-1.5 flex flex-wrap justify-center gap-1 border-t border-border pt-1.5">
             {data.segments.map((seg, i) => (
-              <span
+              <button
                 key={i}
-                className="rounded bg-surface-2 px-1 py-0.5 text-[10px] text-muted-foreground"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  data.onFeatureClick?.(seg)
+                }}
+                className="rounded bg-surface-2 px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                title={`${humanizeFeature(seg)} — click to learn more`}
               >
-                {seg}
-              </span>
+                {humanizeFeature(seg)}
+              </button>
             ))}
           </div>
         )}
@@ -105,14 +121,27 @@ export function WordNode({ data, selected }: { data: NodeData; selected: boolean
               Morphology
             </div>
             <div className="flex flex-wrap justify-center gap-1">
-              {data.feats.split("|").map((feat, i) => (
-                <span
-                  key={i}
-                  className="rounded bg-primary/8 px-1.5 py-0.5 text-[10px] text-primary whitespace-nowrap"
-                >
-                  {feat}
-                </span>
-              ))}
+              {data.feats.split("|").map((feat, i) => {
+                const info = getFeatureInfo(feat)
+                return (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      data.onFeatureClick?.(feat)
+                    }}
+                    className={cn(
+                      "rounded px-1.5 py-0.5 text-[10px] whitespace-nowrap transition-colors cursor-pointer",
+                      info
+                        ? "bg-primary/8 text-primary hover:bg-primary/15"
+                        : "bg-surface-2 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                    )}
+                    title={info ? `${info.label} — click to learn more` : feat}
+                  >
+                    {humanizeFeature(feat)}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
