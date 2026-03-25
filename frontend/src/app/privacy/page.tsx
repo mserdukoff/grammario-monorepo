@@ -31,7 +31,7 @@ export default function PrivacyPage() {
         <div className="space-y-10 text-[15px] leading-7 text-foreground/90">
           <Section title="1. Introduction">
             <p>
-              Grammario (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) provides a
+              Grammario provides a
               visual grammar analysis tool for language learners. This Privacy Policy explains what
               information we collect, how we use it, and the choices you have.
             </p>
