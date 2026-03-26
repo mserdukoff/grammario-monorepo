@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthenticatedClient } from "@/lib/supabase/api"
+import { getAdminClient } from "@/lib/supabase/admin-client"
 import { ADMIN_USER_ID } from "@/lib/admin"
 
 export async function GET(request: NextRequest) {
-  const { supabase, user } = await getAuthenticatedClient(request)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-
+  const { user } = await getAuthenticatedClient(request)
   if (!user || user.id !== ADMIN_USER_ID) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
+
+  const db = getAdminClient()
 
   const searchParams = request.nextUrl.searchParams
   const page = parseInt(searchParams.get("page") || "1")
@@ -86,13 +86,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { supabase, user } = await getAuthenticatedClient(request)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-
+  const { user } = await getAuthenticatedClient(request)
   if (!user || user.id !== ADMIN_USER_ID) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
+
+  const db = getAdminClient()
 
   const { analysis_id } = await request.json()
   if (!analysis_id) {

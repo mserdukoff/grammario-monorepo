@@ -30,15 +30,30 @@ export async function GET(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   
-  // Get user profile for pro status
+  // Get user profile for pro status and custom limits
   const { data: profile } = await db
     .from("users")
-    .select("is_pro")
+    .select("is_pro, daily_sentence_limit, account_expires_at")
     .eq("id", user.id)
     .single()
   
+  // Check account expiry
+  if (profile?.account_expires_at) {
+    const expiresAt = new Date(profile.account_expires_at)
+    if (expiresAt < new Date()) {
+      return NextResponse.json({
+        used_today: 0,
+        limit: 0,
+        remaining: 0,
+        reset_at: 0,
+        is_pro: false,
+        expired: true,
+      })
+    }
+  }
+  
   const isPro = profile?.is_pro ?? false
-  const limit = isPro ? PRO_LIMIT : FREE_LIMIT
+  const limit = profile?.daily_sentence_limit ?? (isPro ? PRO_LIMIT : FREE_LIMIT)
   
   // Count analyses from today
   const today = new Date()

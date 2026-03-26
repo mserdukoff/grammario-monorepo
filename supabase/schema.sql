@@ -30,6 +30,12 @@ CREATE TABLE IF NOT EXISTS public.users (
     subscription_status TEXT CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'trialing')),
     subscription_ends_at TIMESTAMPTZ,
     
+    -- Account management (demo / beta accounts)
+    account_type TEXT DEFAULT 'regular' CHECK (account_type IN ('regular', 'demo', 'beta_tester')),
+    daily_sentence_limit INTEGER DEFAULT NULL CHECK (daily_sentence_limit IS NULL OR daily_sentence_limit > 0),
+    account_expires_at TIMESTAMPTZ DEFAULT NULL,
+    admin_notes TEXT DEFAULT NULL,
+    
     -- Gamification
     xp INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
@@ -46,6 +52,8 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Index for common queries
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_stripe ON public.users(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_users_account_type ON public.users(account_type);
+CREATE INDEX IF NOT EXISTS idx_users_expires ON public.users(account_expires_at) WHERE account_expires_at IS NOT NULL;
 
 -- =============================================================================
 -- ANALYSES TABLE

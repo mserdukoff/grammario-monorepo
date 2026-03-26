@@ -62,12 +62,26 @@ export async function POST(request: NextRequest) {
   if (user) {
     const { data: profile } = await db
       .from("users")
-      .select("is_pro")
+      .select("is_pro, daily_sentence_limit, account_expires_at")
       .eq("id", user.id)
       .single()
     
+    // Block expired accounts
+    if (profile?.account_expires_at) {
+      const expiresAt = new Date(profile.account_expires_at)
+      if (expiresAt < new Date()) {
+        return NextResponse.json(
+          {
+            error: "account_expired",
+            message: "Your account access has expired. Please contact the administrator.",
+          },
+          { status: 403 }
+        )
+      }
+    }
+    
     const isPro = profile?.is_pro ?? false
-    const limit = isPro ? PRO_LIMIT : FREE_LIMIT
+    const limit = profile?.daily_sentence_limit ?? (isPro ? PRO_LIMIT : FREE_LIMIT)
     
     // Count today's analyses
     const today = new Date()

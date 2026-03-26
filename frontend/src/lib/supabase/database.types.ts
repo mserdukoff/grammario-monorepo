@@ -27,6 +27,10 @@ export interface Database {
           stripe_subscription_id: string | null
           subscription_status: string | null
           subscription_ends_at: string | null
+          account_type: "regular" | "demo" | "beta_tester"
+          daily_sentence_limit: number | null
+          account_expires_at: string | null
+          admin_notes: string | null
           xp: number
           level: number
           streak: number
@@ -46,6 +50,10 @@ export interface Database {
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           subscription_ends_at?: string | null
+          account_type?: "regular" | "demo" | "beta_tester"
+          daily_sentence_limit?: number | null
+          account_expires_at?: string | null
+          admin_notes?: string | null
           xp?: number
           level?: number
           streak?: number
@@ -65,6 +73,10 @@ export interface Database {
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           subscription_ends_at?: string | null
+          account_type?: "regular" | "demo" | "beta_tester"
+          daily_sentence_limit?: number | null
+          account_expires_at?: string | null
+          admin_notes?: string | null
           xp?: number
           level?: number
           streak?: number
