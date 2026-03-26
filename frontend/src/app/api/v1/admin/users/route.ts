@@ -4,20 +4,19 @@ import { getAdminClient } from "@/lib/supabase/admin-client"
 import { ADMIN_USER_ID } from "@/lib/admin"
 
 async function requireAdmin(request: NextRequest) {
-  const { user } = await getAuthenticatedClient(request)
+  const { supabase, user } = await getAuthenticatedClient(request)
   if (!user || user.id !== ADMIN_USER_ID) {
     return null
   }
-  return user
+  return { supabase, user }
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  const auth = await requireAdmin(request)
+  if (!auth) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = getAdminClient() as any
+  const db = auth.supabase as any
   const searchParams = request.nextUrl.searchParams
   const page = parseInt(searchParams.get("page") || "1")
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
@@ -43,12 +42,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  const auth = await requireAdmin(request)
+  if (!auth) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = getAdminClient() as any
+  const serviceClient = getAdminClient()
+  if (!serviceClient) {
+    return NextResponse.json(
+      { error: "Service role key not configured. Add SUPABASE_SERVICE_ROLE_KEY to create accounts." },
+      { status: 501 }
+    )
+  }
 
   let body: {
     email: string
@@ -79,7 +82,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { data: authData, error: authError } = await db.auth.admin.createUser({
+  const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
     email: body.email,
     password: body.password,
     email_confirm: true,
@@ -94,6 +97,8 @@ export async function POST(request: NextRequest) {
 
   const userId = authData.user.id
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = auth.supabase as any
   const updates: Record<string, unknown> = {}
   if (body.display_name) updates.display_name = body.display_name
   if (body.account_type) updates.account_type = body.account_type
@@ -126,12 +131,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  const auth = await requireAdmin(request)
+  if (!auth) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = getAdminClient() as any
+  const db = auth.supabase as any
 
   let body: { user_id: string; updates: Record<string, unknown> }
   try {
@@ -171,12 +175,11 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!(await requireAdmin(request))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
-  }
+  const auth = await requireAdmin(request)
+  if (!auth) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = getAdminClient() as any
+  const db = auth.supabase as any
 
   const { user_id } = await request.json()
   if (!user_id || user_id === ADMIN_USER_ID) {
@@ -188,12 +191,15 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: dbError.message }, { status: 500 })
   }
 
-  const { error: authError } = await db.auth.admin.deleteUser(user_id)
-  if (authError) {
-    return NextResponse.json(
-      { error: `DB row deleted but auth user removal failed: ${authError.message}` },
-      { status: 207 }
-    )
+  const serviceClient = getAdminClient()
+  if (serviceClient) {
+    const { error: authError } = await serviceClient.auth.admin.deleteUser(user_id)
+    if (authError) {
+      return NextResponse.json(
+        { error: `DB row deleted but auth user removal failed: ${authError.message}` },
+        { status: 207 }
+      )
+    }
   }
 
   return NextResponse.json({ deleted: true })

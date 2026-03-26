@@ -2,6 +2,11 @@ import { createClient } from "@supabase/supabase-js"
 
 let adminClient: ReturnType<typeof createClient> | null = null
 
+/**
+ * Returns a Supabase client using the service role key (bypasses RLS).
+ * Only needed for auth admin operations (createUser / deleteUser).
+ * Returns null if SUPABASE_SERVICE_ROLE_KEY is not configured.
+ */
 export function getAdminClient() {
   if (adminClient) return adminClient
 
@@ -9,9 +14,7 @@ export function getAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceRoleKey) {
-    throw new Error(
-      "Missing SUPABASE_SERVICE_ROLE_KEY – required for admin operations"
-    )
+    return null
   }
 
   adminClient = createClient(url, serviceRoleKey, {
