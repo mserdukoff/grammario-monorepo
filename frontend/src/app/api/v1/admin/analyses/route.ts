@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const searchParams = request.nextUrl.searchParams
   const page = parseInt(searchParams.get("page") || "1")
@@ -91,7 +92,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const { analysis_id } = await request.json()
   if (!analysis_id) {

@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
   const searchParams = request.nextUrl.searchParams
   const page = parseInt(searchParams.get("page") || "1")
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
@@ -46,7 +47,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   let body: {
     email: string
@@ -128,7 +130,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   let body: { user_id: string; updates: Record<string, unknown> }
   try {
@@ -172,7 +175,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const { user_id } = await request.json()
   if (!user_id || user_id === ADMIN_USER_ID) {

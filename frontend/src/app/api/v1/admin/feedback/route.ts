@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const url = new URL(request.url)
   const category = url.searchParams.get("category")
@@ -71,7 +72,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
-  const db = getAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = getAdminClient() as any
 
   const body = await request.json()
   const { id, is_resolved, admin_notes } = body
