@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     subscription_ends_at TIMESTAMPTZ,
     
     -- Account management (demo / beta accounts)
-    account_type TEXT DEFAULT 'regular' CHECK (account_type IN ('regular', 'demo', 'beta_tester')),
+    account_type TEXT DEFAULT 'regular' CHECK (account_type IN ('regular', 'test')),
     daily_sentence_limit INTEGER DEFAULT NULL CHECK (daily_sentence_limit IS NULL OR daily_sentence_limit > 0),
     account_expires_at TIMESTAMPTZ DEFAULT NULL,
     admin_notes TEXT DEFAULT NULL,

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     usersRes,
     activeUsersRes,
     proUsersRes,
-    demoUsersRes,
+    testUsersRes,
     totalAnalysesRes,
     analysesTodayRes,
     analysesWeekRes,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       total: usersRes.count || 0,
       active_this_week: activeUsersRes.count || 0,
       pro: proUsersRes.count || 0,
-      demo: demoUsersRes.count || 0,
+      test: testUsersRes.count || 0,
     },
     analyses: {
       total: totalAnalysesRes.count || 0,

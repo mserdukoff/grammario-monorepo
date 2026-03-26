@@ -9,7 +9,7 @@ import { ADMIN_USER_ID } from "@/lib/admin"
 import { cn } from "@/lib/utils"
 import { authFetch } from "@/lib/auth-fetch"
 
-type AccountType = "regular" | "demo" | "beta_tester"
+type AccountType = "regular" | "test"
 
 interface UserRow {
   id: string
@@ -34,20 +34,17 @@ interface UserRow {
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   regular: "Regular",
-  demo: "Demo",
-  beta_tester: "Beta Tester",
+  test: "Test",
 }
 
 const ACCOUNT_TYPE_STYLES: Record<AccountType, string> = {
   regular: "bg-muted text-muted-foreground border-border",
-  demo: "bg-primary/10 text-primary border-primary/20",
-  beta_tester: "bg-success-light text-success border-success/20",
+  test: "bg-primary/10 text-primary border-primary/20",
 }
 
 const FILTER_TABS: { value: string; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "demo", label: "Demo" },
-  { value: "beta_tester", label: "Beta Tester" },
+  { value: "test", label: "Test" },
   { value: "regular", label: "Regular" },
 ]
 
@@ -83,7 +80,7 @@ export default function AdminUsers() {
     password: "",
     display_name: "",
     daily_sentence_limit: "",
-    account_type: "demo" as AccountType,
+    account_type: "test" as AccountType,
     account_expires_at: "",
     admin_notes: "",
   })
@@ -200,7 +197,7 @@ export default function AdminUsers() {
         setShowCreate(false)
         setCreateForm({
           email: "", password: "", display_name: "",
-          daily_sentence_limit: "", account_type: "demo",
+          daily_sentence_limit: "", account_type: "test",
           account_expires_at: "", admin_notes: "",
         })
         load(page, typeFilter)
@@ -242,7 +239,7 @@ export default function AdminUsers() {
       {/* Create Account Form */}
       {showCreate && (
         <div className="rounded-xl border border-primary/20 bg-surface-2 p-6">
-          <h2 className="text-sm font-semibold mb-4">Create Demo / Beta Account</h2>
+          <h2 className="text-sm font-semibold mb-4">Create Test Account</h2>
           {createError && (
             <div className="mb-4 p-3 rounded-lg bg-error-light text-error text-xs flex items-center gap-2">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -284,8 +281,7 @@ export default function AdminUsers() {
                 onChange={e => setCreateForm(f => ({ ...f, account_type: e.target.value as AccountType }))}
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary/50"
               >
-                <option value="demo">Demo</option>
-                <option value="beta_tester">Beta Tester</option>
+                <option value="test">Test</option>
                 <option value="regular">Regular</option>
               </select>
             </div>
@@ -294,7 +290,7 @@ export default function AdminUsers() {
               <input
                 type="number" min="1" value={createForm.daily_sentence_limit}
                 onChange={e => setCreateForm(f => ({ ...f, daily_sentence_limit: e.target.value }))}
-                placeholder="Leave blank for default (100)"
+                placeholder="Leave blank for default (50)"
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary/50"
               />
             </div>
@@ -412,8 +408,7 @@ export default function AdminUsers() {
                           className="bg-card border border-border rounded px-1.5 py-0.5 text-[10px] focus:outline-none"
                         >
                           <option value="regular">Regular</option>
-                          <option value="demo">Demo</option>
-                          <option value="beta_tester">Beta Tester</option>
+                          <option value="test">Test</option>
                         </select>
                       ) : (
                         <span className={cn(
