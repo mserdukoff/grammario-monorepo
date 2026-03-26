@@ -30,6 +30,7 @@ import {
   ChevronUp,
   X,
   MessageSquarePlus,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -554,6 +555,17 @@ export default function AnalyzePage() {
           </div>
         </div>
 
+        {selectedLang === "tr" && (
+          <div className="border-b border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5">
+            <div className="flex items-center gap-2.5 max-w-screen-xl mx-auto">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                Turkish support is still being developed and may produce less accurate results.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 flex overflow-hidden relative">
           {/* Graph canvas */}
           <div className="flex-1 relative">
@@ -618,7 +630,7 @@ export default function AnalyzePage() {
                     Enter a sentence above and press Analyze to visualize its structure.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Beta access: Unlimited analyses
+                    Free accounts: 3 analyses per day
                   </p>
                 </div>
               </div>

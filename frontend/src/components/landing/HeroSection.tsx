@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, FlaskConical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const LANGUAGES = [
@@ -14,7 +14,13 @@ const LANGUAGES = [
 
 export function HeroSection() {
   return (
-    <section className="relative pt-16 pb-20 md:pt-24 md:pb-32 lg:pt-32 lg:pb-40">
+    <section className="relative pt-0 pb-20 md:pb-32 lg:pb-40">
+      <div className="w-full bg-primary/5 border-b border-primary/10 py-2.5 px-4 mb-16 md:mb-24 lg:mb-32">
+        <p className="text-center text-sm text-primary flex items-center justify-center gap-2">
+          <FlaskConical className="w-3.5 h-3.5" />
+          <span>Grammario is entering its testing phase — features and daily limits are subject to change.</span>
+        </p>
+      </div>
       <div className="container max-w-screen-xl">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">

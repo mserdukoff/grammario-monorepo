@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthenticatedClient } from "@/lib/supabase/api"
 
 // Rate limits
-const FREE_LIMIT = 50
+const FREE_LIMIT = 3
 const PRO_LIMIT = 1000
 const WINDOW_SECONDS = 86400  // 24 hours
 

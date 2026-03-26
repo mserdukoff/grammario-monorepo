@@ -11,7 +11,7 @@ export function PricingSection() {
           Simple pricing
         </h2>
         <p className="text-muted-foreground text-lg leading-relaxed">
-          Grammario is in beta. Enjoy full access to every feature while we build.
+          Grammario is in its testing phase. Enjoy full access to every feature while we build — daily limits are likely to change as we scale.
         </p>
       </div>
 
@@ -20,12 +20,12 @@ export function PricingSection() {
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-primary mb-2">Current access</p>
             <p className="text-3xl font-semibold">Free</p>
-            <p className="text-sm text-muted-foreground mt-1">During beta</p>
+            <p className="text-sm text-muted-foreground mt-1">During testing phase</p>
           </div>
 
           <ul className="space-y-3">
             {[
-              "Unlimited analyses",
+              "3 analyses per day",
               "All 5 languages",
               "AI-powered explanations",
               "Streak & XP tracking",

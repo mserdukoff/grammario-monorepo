@@ -20,6 +20,18 @@ const faqs = [
   {
     question: "Can I use it on mobile?",
     answer: "The platform is fully responsive. The dependency graph adapts to smaller screens, and the analysis interface works well on touch devices."
+  },
+  {
+    question: "Is my data private?",
+    answer: "Yes. Your analyses are stored securely in your account and are never shared with third parties. You can delete any saved analysis at any time."
+  },
+  {
+    question: "How is this different from Google Translate?",
+    answer: "Google Translate gives you a translation. Grammario gives you a structural breakdown — dependency relations, morphological features, case governance, and AI-generated explanations of why the grammar works the way it does. It's a learning tool, not just a translation tool."
+  },
+  {
+    question: "Will more languages be added?",
+    answer: "Yes. We're actively working on expanding language support. Each new language requires specialized handling for its grammar patterns, so we add them carefully to ensure quality."
   }
 ]
 
@@ -57,7 +69,7 @@ export function FaqSection() {
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-300",
-                    openIndex === index ? "max-h-48 opacity-100 pb-5" : "max-h-0 opacity-0"
+                    openIndex === index ? "max-h-64 opacity-100 pb-5" : "max-h-0 opacity-0"
                   )}
                   style={{ transitionTimingFunction: "var(--ease-out-quart)" }}
                 >
