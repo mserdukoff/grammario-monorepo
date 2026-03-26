@@ -6,9 +6,9 @@ services:
     image: redis:7-alpine
     container_name: grammario-redis
     restart: always
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    ports:
-      - "6379:6379"
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -43,6 +43,7 @@ services:
       # Stanza model configuration
       - MAX_LOADED_MODELS=${MAX_LOADED_MODELS:-5}
       - PRELOAD_MODELS=${PRELOAD_MODELS:-true}
+      - PREFERRED_ENGINE=${PREFERRED_ENGINE:-spacy}
       
       # Redis
       - REDIS_URL=redis://redis:6379/0
@@ -52,9 +53,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3500M  # Allow more with swap
+          memory: 6144M
         reservations:
-          memory: 1024M
+          memory: 2048M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

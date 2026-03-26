@@ -159,10 +159,10 @@ export default function AdminBackend() {
               <div>
                 <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
                   <span>RSS</span>
-                  <span>{health.memory.rss_mb} / 3500 MB</span>
+                  <span>{health.memory.rss_mb} / 6144 MB</span>
                 </div>
                 <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full transition-all", health.memory.rss_mb > 2800 ? "bg-error" : health.memory.rss_mb > 2000 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min((health.memory.rss_mb / 3500) * 100, 100)}%` }} />
+                  <div className={cn("h-full rounded-full transition-all", health.memory.rss_mb > 5000 ? "bg-error" : health.memory.rss_mb > 3500 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min((health.memory.rss_mb / 6144) * 100, 100)}%` }} />
                 </div>
               </div>
             </Card>
