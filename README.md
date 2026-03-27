@@ -6,14 +6,17 @@
   <img src="https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat-square&logo=fastapi" alt="FastAPI">
   <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase" alt="Supabase">
+  <img src="https://img.shields.io/badge/spaCy-NLP-09A3D5?style=flat-square&logo=spacy" alt="spaCy">
   <img src="https://img.shields.io/badge/Stanza-NLP-FF6B6B?style=flat-square" alt="Stanza">
+  <img src="https://img.shields.io/badge/Redis-Cache-DC382D?style=flat-square&logo=redis" alt="Redis">
+  <img src="https://img.shields.io/badge/pgvector-Embeddings-336791?style=flat-square&logo=postgresql" alt="pgvector">
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss" alt="Tailwind">
 </div>
 
 <br>
 
-**Grammario** is a production-ready linguistic analysis platform that helps language learners deeply understand grammar through interactive visualizations and AI-powered explanations. It combines Stanford NLP (Stanza) for linguistic analysis with LLM-powered pedagogical insights to explain *why* grammar works the way it does.
+**Grammario** is a production-ready linguistic analysis platform that helps language learners deeply understand grammar through interactive visualizations and AI-powered explanations. It combines spaCy and Stanford NLP (Stanza) for linguistic analysis with LLM-powered pedagogical insights, sentence embeddings for similarity search, CEFR difficulty scoring, rule-based error detection, and a spaced repetition vocabulary system — all behind a gamified learning experience.
 
 ---
 
@@ -27,6 +30,7 @@
 - [Backend](#-backend)
 - [Database Schema](#-database-schema)
 - [API Documentation](#-api-documentation)
+- [Admin Dashboard](#-admin-dashboard)
 - [Deployment](#-deployment)
 - [Video Generation System](#-video-generation-system)
 - [Environment Variables](#-environment-variables)
@@ -37,14 +41,19 @@
 
 ---
 
-## 🌟 Features
+## Features
 
 ### Core Analysis Engine
-- **Deep Linguistic Analysis** — Stanford NLP (Stanza) for tokenization, lemmatization, POS tagging, morphological analysis, and dependency parsing
+- **Dual NLP Backend** — spaCy (preferred, CPU-optimized) with Stanza fallback for robust tokenization, POS tagging, lemmatization, morphological analysis, and dependency parsing
 - **AI-Powered Explanations** — LLM-generated pedagogical insights explaining grammar concepts, rules, and the "why" behind grammatical choices
+- **CEFR Difficulty Scoring** — Automatic A1–C2 difficulty classification using engineered linguistic features (sentence length, tree depth, subordination, morphological complexity, TTR, lexical density)
+- **Rule-Based Error Detection** — Language-specific grammar agreement checking (Romance gender/number, inflection case, Turkish vowel harmony, universal subject-verb agreement)
+- **Sentence Embeddings** — 384-dimensional multilingual embeddings via sentence-transformers for similarity search
 - **Interactive Visualization** — ReactFlow-based syntax tree and linear views with draggable nodes
 - **5 Languages Supported** — Italian, Spanish, German, Russian, Turkish
 - **Language-Specific Strategies** — Romance (clitics, MWT), Inflection (cases, aspect), Agglutinative (Turkish morpheme segmentation)
+- **Redis Caching** — 24-hour analysis cache with SHA-256 key hashing for instant repeated lookups
+- **Parallel Pipeline** — NLP, LLM explanations, and embeddings run concurrently via `asyncio.gather`
 
 ### Visualization Modes
 - **Linear View** — Words displayed in sentence order with dependency arrows
@@ -58,43 +67,66 @@
 - **Nuance** — Cultural and linguistic notes explaining subtle meanings
 - **Grammar Concepts** — Detailed explanations with names, descriptions, and related words
 - **"Why" Tips** — Answers to questions like "Why -a at the end?" with rules and examples
+- **LLM Grammar Errors** — AI-detected grammar issues with explanations
+- **Rule-Based Errors** — Deterministic agreement checks with severity levels and corrections
+- **CEFR Level** — Difficulty badge (A1–C2) with raw score and feature breakdown
+
+### Vocabulary & Spaced Repetition
+- **SM-2 Algorithm** — SuperMemo-2 spaced repetition with ease factor, interval progression, and mastery scoring
+- **Flashcard Review** — Dedicated `/app/review` page with reveal-based flashcards
+- **Quality Ratings** — 0–5 quality scale (Wrong, Hard, Good shortcuts) affecting interval scheduling
+- **Review Stats** — Total words, due today, mastered count (mastery >= 80%)
+- **Session Summary** — Post-review stats with accuracy and restart option
 
 ### Gamification (Duolingo-inspired)
-- 🔥 **Streaks** — Daily learning habit tracking with consecutive day counting
-- ⚡ **XP & Levels** — Progress through 10 levels with exponential XP requirements (10 XP per analysis)
-- 🎯 **Daily Goals** — Customizable targets (3-20 analyses per day)
-- 🏆 **Achievements** — 15 unlockable badges (first analysis, milestones, streaks, vocabulary, levels, polyglot)
-- 📊 **Stats Dashboard** — Track level, XP progress, streak, and daily goal completion
+- **Streaks** — Daily learning habit tracking with consecutive day counting
+- **XP & Levels** — Progress through 10 levels with exponential XP requirements (10 XP per analysis)
+- **Daily Goals** — Customizable targets (3–20 analyses per day)
+- **Achievements** — 15+ unlockable badges (first analysis, milestones, streaks, vocabulary, levels, polyglot)
+- **Stats Dashboard** — Track level, XP progress, streak, and daily goal completion
 
 ### User Features
-- 🔐 **Authentication** — Email/password + Google OAuth via Supabase Auth
-- 📝 **History** — Save and view recent analyses (last 20)
-- ⭐ **Favorites** — Mark analyses as favorites for quick access
-- 📚 **Vocabulary** — Spaced repetition system using SM-2 algorithm
-- 🔊 **Text-to-Speech** — Browser SpeechSynthesis API with language-specific voices
-- ⚙️ **Settings** — Daily goal targets, TTS toggle, translation preferences
-- 👤 **Pro Status** — Beta users get unlimited analyses
+- **Authentication** — Email/password + Google OAuth via Supabase Auth
+- **History** — Save and view recent analyses (last 20) with favorites
+- **Sentence Feedback** — Star ratings (1–5), category tags, and comments on analysis quality
+- **Text-to-Speech** — Browser SpeechSynthesis API with language-specific voices
+- **Settings** — Daily goal targets, TTS toggle, translation preferences
+- **Account Types** — Regular and test accounts with configurable sentence limits and expiry
+
+### Admin Dashboard
+- **Overview** — KPI cards (total users, analyses, vocabulary, feedback), language breakdown, recent activity
+- **User Management** — Search, filter by account type, inline edit, create/delete users
+- **Request Inspector** — Browse all analyses, deep-link by ID, raw JSON view, delete
+- **Vocabulary Browser** — Paginated view of all user vocabulary entries
+- **Feedback Manager** — Filter by category/resolved, summary stats, resolve and annotate
+- **Backend Health** — Live health check proxy to FastAPI, service status, memory info
+
+### Legal & Information Pages
+- **Terms of Service** — 13-section legal document with Canadian governing law
+- **Privacy Policy** — Data collection, third-party services, retention, and user rights
+- **Patch Notes** — Technical changelog with Mermaid architecture diagrams and markdown rendering
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           FRONTEND (Vercel)                                   │
-│                        Next.js 16 • React 19 • TypeScript                     │
-│                    Tailwind CSS v4 • ReactFlow • Zustand                      │
-│                                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │   Landing   │  │    App      │  │  Settings   │  │    Auth     │          │
-│  │    Page     │  │  Dashboard  │  │    Page     │  │   Callback  │          │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘          │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────┐         │
-│  │                    Next.js API Routes                           │         │
-│  │  /api/v1/analyze  │  /api/v1/languages  │  /api/v1/usage        │         │
-│  └─────────────────────────────────────────────────────────────────┘         │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                            FRONTEND (Vercel)                                   │
+│                     Next.js 16 • React 19 • TypeScript                         │
+│                 Tailwind CSS v4 • ReactFlow • Zustand • TanStack Query         │
+│                                                                                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
+│  │ Landing  │ │   App    │ │  Analyze │ │  Review  │ │  Admin   │            │
+│  │  Page    │ │   Home   │ │   Page   │ │   Page   │ │  Panel   │            │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
+│                                                                                │
+│  ┌──────────────────────────────────────────────────────────────────────┐      │
+│  │                      Next.js API Routes                              │      │
+│  │  /api/v1/analyze  │  /api/v1/languages  │  /api/v1/usage            │      │
+│  │  /api/v1/vocabulary/review  │  /api/v1/admin/*                      │      │
+│  └──────────────────────────────────────────────────────────────────────┘      │
+└────────────────────────────────────────────────────────────────────────────────┘
                                     │
            ┌────────────────────────┴────────────────────────┐
            ▼                                                 ▼
@@ -103,26 +135,45 @@
 │                             │               │    FastAPI • Python 3.11          │
 │  ┌───────────────────────┐  │               │                                   │
 │  │   Supabase Auth       │  │               │  ┌────────────────────────────┐   │
-│  │   • Email/Password    │  │               │  │      NLP Service           │   │
-│  │   • Google OAuth      │  │               │  │   • Stanza Pipelines       │   │
-│  │   • JWT Tokens        │  │               │  │   • LRU Model Caching      │   │
-│  └───────────────────────┘  │               │  │   • 5 Language Models      │   │
+│  │   • Email/Password    │  │               │  │    NLP Pipeline            │   │
+│  │   • Google OAuth      │  │               │  │   • spaCy (preferred)      │   │
+│  │   • JWT Tokens        │  │               │  │   • Stanza (fallback)      │   │
+│  └───────────────────────┘  │               │  │   • LRU Model Caching     │   │
 │                             │               │  └────────────────────────────┘   │
 │  ┌───────────────────────┐  │               │                                   │
-│  │   PostgreSQL          │  │               │  ┌────────────────────────────┐   │
-│  │   • users             │  │               │  │      LLM Service           │   │
-│  │   • analyses          │  │  ◄──────────► │  │   • OpenRouter (Primary)   │   │
-│  │   • vocabulary        │  │               │  │   • OpenAI (Fallback)      │   │
-│  │   • daily_goals       │  │               │  │   • Response Caching       │   │
-│  │   • achievements      │  │               │  └────────────────────────────┘   │
-│  │   • user_achievements │  │               │                                   │
-│  └───────────────────────┘  │               │  ┌────────────────────────────┐   │
-│                             │               │  │   Language Strategies      │   │
-│  ┌───────────────────────┐  │               │  │   • RomanceStrategy        │   │
-│  │   Row Level Security  │  │               │  │   • InflectionStrategy     │   │
-│  │   (User data isolation)│  │               │  │   • AgglutinativeStrategy  │   │
-│  └───────────────────────┘  │               │  └────────────────────────────┘   │
-└─────────────────────────────┘               └──────────────────────────────────┘
+│  │   PostgreSQL + pgvec  │  │               │  ┌────────────────────────────┐   │
+│  │   • users             │  │               │  │    LLM Service             │   │
+│  │   • analyses          │  │  ◄──────────► │  │   • OpenRouter (primary)   │   │
+│  │   • vocabulary        │  │               │  │   • OpenAI (fallback)      │   │
+│  │   • daily_goals       │  │               │  └────────────────────────────┘   │
+│  │   • achievements      │  │               │                                   │
+│  │   • user_achievements │  │               │  ┌────────────────────────────┐   │
+│  │   • sentence_feedback │  │               │  │    Embedding Service       │   │
+│  │   • match_analyses()  │  │               │  │   • sentence-transformers  │   │
+│  └───────────────────────┘  │               │  │   • 384-dim vectors        │   │
+│                             │               │  └────────────────────────────┘   │
+│  ┌───────────────────────┐  │               │                                   │
+│  │   Row Level Security  │  │               │  ┌────────────────────────────┐   │
+│  │   (User data isolation)│  │               │  │    Analysis Enrichment     │   │
+│  └───────────────────────┘  │               │  │   • Difficulty (A1–C2)     │   │
+│                             │               │  │   • Error Detection        │   │
+└─────────────────────────────┘               │  │   • Frequency Bands        │   │
+                                              │  └────────────────────────────┘   │
+                                              │                                   │
+                                              │  ┌────────────────────────────┐   │
+                                              │  │    Redis Cache             │   │
+                                              │  │   • 24h TTL               │   │
+                                              │  │   • SHA-256 keys          │   │
+                                              │  │   • LRU eviction          │   │
+                                              │  └────────────────────────────┘   │
+                                              │                                   │
+                                              │  ┌────────────────────────────┐   │
+                                              │  │   Language Strategies      │   │
+                                              │  │   • RomanceStrategy        │   │
+                                              │  │   • InflectionStrategy     │   │
+                                              │  │   • AgglutinativeStrategy  │   │
+                                              │  └────────────────────────────┘   │
+                                              └──────────────────────────────────┘
                                                               │
                                                               ▼
                                               ┌──────────────────────────────────┐
@@ -136,20 +187,25 @@
 
 ### Data Flow
 
-1. User enters sentence → clicks "Analyze"
-2. Frontend calls `/api/v1/analyze` → validates input, checks rate limits
-3. Next.js API proxies to Python NLP backend
-4. **Stanza Pipeline**: Text → Tokenization → POS Tagging → Lemmatization → Dependency Parsing
-5. **Language Strategy**: Processes Stanza output into TokenNodes (handles language-specific features)
-6. **LLM Service**: Generates pedagogical explanations (translation, concepts, tips)
-7. Backend returns `SentenceAnalysis` with nodes and pedagogical data
-8. Frontend builds ReactFlow graph from nodes/edges
-9. If authenticated: saves to Supabase, updates XP, checks daily goal
-10. Displays visualization + pedagogical insights panel
+1. User enters sentence on `/app/analyze` and clicks "Analyze"
+2. Frontend calls `/api/v1/analyze` via `authFetch` (Bearer token) — validates input, checks rate limits and account quotas
+3. Next.js API route proxies to Python NLP backend
+4. **Redis Cache Check**: SHA-256 hash of `language:text` — on hit, returns cached result instantly
+5. **Parallel Execution** (`asyncio.gather`):
+   - **NLP Pipeline**: spaCy (preferred) or Stanza (fallback) → Tokenization → POS Tagging → Lemmatization → Dependency Parsing
+   - **LLM Service**: Generates pedagogical explanations (translation, concepts, tips, errors)
+   - **Embedding Service**: Generates 384-dim sentence vector
+6. **Language Strategy**: Processes NLP output into TokenNodes (handles language-specific features like clitics, cases, agglutination)
+7. **Post-Processing**: Difficulty scoring (CEFR A1–C2), rule-based error detection
+8. Backend returns `SentenceAnalysis` with nodes, pedagogical data, difficulty, errors, and embedding
+9. **Cache Write**: Stores result in Redis (embedding stripped to save space)
+10. Frontend builds ReactFlow graph from nodes/edges
+11. If authenticated: saves to Supabase (with pgvector embedding), updates XP, checks daily goal, checks achievements
+12. Displays visualization + pedagogical insights panel + difficulty badge + error annotations
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 ### Frontend
 
@@ -159,11 +215,14 @@
 | UI Library | React | 19.2.1 | Component library |
 | Language | TypeScript | 5.x | Type safety |
 | Styling | Tailwind CSS | v4 | Utility-first CSS |
+| Typography | @tailwindcss/typography | - | Prose styling for markdown content |
 | State (Client) | Zustand | 5.0.9 | Persistent client state |
 | State (Server) | TanStack Query | 5.90.17 | Server state & caching |
 | Visualization | ReactFlow | 11.11.4 | Interactive node graphs |
 | Graph Layout | Dagre | 0.8.5 | Dependency tree layout |
 | Animation | Framer Motion | 12.23.26 | Smooth animations |
+| Diagrams | Mermaid | - | Architecture and flow diagrams |
+| Markdown | react-markdown + remark-gfm | - | Rich text rendering (patch notes) |
 | Icons | Lucide React | 0.561.0 | Icon library |
 | Toasts | Sonner | 2.0.7 | Toast notifications |
 | HTTP Client | Axios | 1.13.2 | API calls |
@@ -176,23 +235,30 @@
 
 | Category | Technology | Version | Purpose |
 |----------|------------|---------|---------|
-| Framework | FastAPI | ≥0.109.0 | Async API framework |
-| Server | Uvicorn | ≥0.27.0 | ASGI server |
-| Validation | Pydantic | ≥2.5.0 | Schema validation |
-| Settings | Pydantic-settings | ≥2.1.0 | Environment config |
-| NLP | Stanza | ≥1.7.0 | Stanford NLP pipelines |
-| LLM Client | OpenAI | ≥1.10.0 | OpenRouter/OpenAI API |
-| HTTP | httpx | ≥0.26.0 | Async HTTP client |
-| Environment | python-dotenv | ≥1.0.0 | .env file loading |
+| Framework | FastAPI | >=0.109.0 | Async API framework |
+| Server | Uvicorn | >=0.27.0 | ASGI server |
+| Validation | Pydantic | >=2.5.0 | Schema validation |
+| Settings | Pydantic-settings | >=2.1.0 | Environment config |
+| NLP (Primary) | spaCy | >=3.7.0 | CPU-optimized NLP pipelines |
+| NLP (Fallback) | Stanza | >=1.7.0 | Stanford NLP pipelines |
+| Embeddings | sentence-transformers | >=2.2.0 | Multilingual sentence embeddings |
+| ML | scikit-learn + joblib | >=1.4.0 | Future trained difficulty models |
+| Numeric | NumPy | >=1.26.0 | Vector operations |
+| LLM Client | OpenAI | >=1.10.0 | OpenRouter/OpenAI API |
+| HTTP | httpx | >=0.26.0 | Async HTTP client |
+| Cache | Redis | >=5.0.0 | Analysis result caching |
+| System | psutil | >=5.9.0 | Memory/system monitoring |
+| Environment | python-dotenv | >=1.0.0 | .env file loading |
 
 ### Database & Auth
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
 | Database | Supabase PostgreSQL | Managed PostgreSQL with RLS |
+| Vector Search | pgvector | 384-dim sentence embeddings with IVFFlat index |
 | Auth | Supabase Auth | JWT-based authentication |
-| Client | @supabase/supabase-js | 2.90.1 | Browser client |
-| SSR Client | @supabase/ssr | 0.8.0 | Server-side rendering |
+| Client | @supabase/supabase-js 2.90.1 | Browser client |
+| SSR Client | @supabase/ssr 0.8.0 | Server-side rendering |
 
 ### Infrastructure
 
@@ -200,10 +266,12 @@
 |----------|------------|---------|
 | Container | Docker | Containerization |
 | Orchestration | Docker Compose | Multi-container management |
+| Cache | Redis 7 Alpine | Analysis caching with LRU eviction |
 | Reverse Proxy | Nginx | Rate limiting, SSL, caching |
 | SSL | Let's Encrypt (Certbot) | Free SSL certificates |
+| Auto-Update | Watchtower | Automatic container updates (optional) |
 | CI/CD | GitHub Actions | Automated testing & deployment |
-| Frontend Hosting | Vercel | Next.js optimized hosting |
+| Frontend Hosting | Vercel | Next.js optimized hosting (iad1 region) |
 | Backend Hosting | DigitalOcean | Docker container hosting |
 
 ### Video Generation
@@ -216,69 +284,118 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-GrammarioNew/
+grammario-monorepo/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml              # GitHub Actions CI/CD pipeline
+│       └── deploy.yml                # CI/CD: test → build → deploy → notify
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                 # FastAPI application entry point
+│   │   ├── main.py                   # FastAPI app, CORS, lifespan events
 │   │   ├── api/
 │   │   │   ├── __init__.py
-│   │   │   └── routes.py           # API endpoints (/analyze, /languages)
+│   │   │   └── routes.py             # /analyze, /embed, /languages, /cache/*
 │   │   ├── core/
 │   │   │   ├── __init__.py
-│   │   │   ├── config.py           # Pydantic settings configuration
-│   │   │   └── security.py         # Input sanitization
+│   │   │   ├── config.py             # Pydantic settings
+│   │   │   └── security.py           # Input sanitization
 │   │   ├── models/
 │   │   │   ├── __init__.py
-│   │   │   └── schemas.py          # Pydantic models (TokenNode, etc.)
+│   │   │   └── schemas.py            # Pydantic models (TokenNode, DifficultyInfo, etc.)
 │   │   └── services/
 │   │       ├── __init__.py
-│   │       ├── nlp.py              # NLP orchestration service
-│   │       ├── llm_service.py      # LLM integration (OpenRouter/OpenAI)
-│   │       ├── stanza_manager.py   # Stanza pipeline manager (LRU)
+│   │       ├── nlp.py                # NLP orchestration (parallel pipeline)
+│   │       ├── llm_service.py        # LLM integration (OpenRouter/OpenAI)
+│   │       ├── spacy_manager.py      # spaCy pipeline manager (LRU)
+│   │       ├── stanza_manager.py     # Stanza pipeline manager (LRU fallback)
+│   │       ├── embeddings.py         # Sentence-transformers embedding service
+│   │       ├── difficulty_scorer.py  # CEFR A1–C2 difficulty scoring
+│   │       ├── error_detector.py     # Rule-based grammar error detection
+│   │       ├── frequency.py          # Lemma frequency band service (1–5)
+│   │       ├── cache.py              # Redis caching service
 │   │       └── strategies/
 │   │           ├── __init__.py
-│   │           ├── base.py         # Abstract strategy base class
-│   │           └── concrete.py     # Language-specific strategies
-│   ├── Dockerfile                  # Development Docker image
-│   ├── Dockerfile.prod             # Production multi-stage build
-│   ├── download_models.py          # Script to pre-download Stanza models
-│   ├── requirements.txt            # Python dependencies
-│   ├── test_api.py                 # API endpoint tests
-│   └── test_llm.py                 # LLM integration tests
+│   │           ├── base.py           # Abstract strategy base class
+│   │           └── concrete.py       # Language-specific strategies
+│   ├── data/
+│   │   └── frequency/                # Lemma frequency JSON maps per language
+│   ├── Dockerfile                    # Development Docker image
+│   ├── Dockerfile.prod               # Production multi-stage build
+│   ├── download_models.py            # Pre-download Stanza/spaCy models
+│   ├── requirements.txt              # Python dependencies
+│   ├── test_api.py                   # API endpoint tests
+│   └── test_llm.py                   # LLM integration tests
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── layout.tsx          # Root layout with providers
-│   │   │   ├── page.tsx            # Landing page
-│   │   │   ├── globals.css         # Global styles & CSS variables
+│   │   │   ├── layout.tsx            # Root layout with providers & fonts
+│   │   │   ├── page.tsx              # Landing page
+│   │   │   ├── globals.css           # Global styles & CSS variables
+│   │   │   ├── terms/
+│   │   │   │   └── page.tsx          # Terms of Service
+│   │   │   ├── privacy/
+│   │   │   │   └── page.tsx          # Privacy Policy
+│   │   │   ├── patch-notes/
+│   │   │   │   └── page.tsx          # Changelog with Mermaid diagrams
 │   │   │   ├── app/
-│   │   │   │   ├── page.tsx        # Main dashboard (analysis interface)
+│   │   │   │   ├── page.tsx          # App home (dashboard hub)
+│   │   │   │   ├── analyze/
+│   │   │   │   │   └── page.tsx      # Sentence analysis interface
+│   │   │   │   ├── review/
+│   │   │   │   │   └── page.tsx      # Vocabulary review (flashcards)
 │   │   │   │   └── settings/
-│   │   │   │       └── page.tsx    # User settings page
+│   │   │   │       └── page.tsx      # User settings
+│   │   │   ├── admin/
+│   │   │   │   ├── layout.tsx        # Admin shell with sidebar nav
+│   │   │   │   ├── page.tsx          # Admin overview (KPIs)
+│   │   │   │   ├── users/
+│   │   │   │   │   └── page.tsx      # User management (CRUD)
+│   │   │   │   ├── requests/
+│   │   │   │   │   └── page.tsx      # Analysis inspector
+│   │   │   │   ├── vocabulary/
+│   │   │   │   │   └── page.tsx      # Vocabulary browser
+│   │   │   │   ├── feedback/
+│   │   │   │   │   └── page.tsx      # Feedback manager
+│   │   │   │   └── backend/
+│   │   │   │       └── page.tsx      # Backend health monitor
 │   │   │   ├── auth/
 │   │   │   │   ├── callback/
-│   │   │   │   │   └── page.tsx    # OAuth callback handler
+│   │   │   │   │   └── page.tsx      # OAuth callback handler
 │   │   │   │   └── error/
-│   │   │   │       └── page.tsx    # Auth error page
+│   │   │   │       └── page.tsx      # Auth error page
 │   │   │   └── api/v1/
 │   │   │       ├── analyze/
-│   │   │       │   └── route.ts    # Analyze endpoint (proxies to backend)
+│   │   │       │   └── route.ts      # Proxy to Python backend
 │   │   │       ├── languages/
-│   │   │       │   └── route.ts    # Supported languages endpoint
-│   │   │       └── usage/
-│   │   │           └── route.ts    # User usage statistics endpoint
+│   │   │       │   └── route.ts      # Supported languages
+│   │   │       ├── usage/
+│   │   │       │   └── route.ts      # User usage statistics
+│   │   │       ├── vocabulary/
+│   │   │       │   └── review/
+│   │   │       │       └── route.ts  # SRS review (GET due words, POST review)
+│   │   │       └── admin/
+│   │   │           ├── stats/
+│   │   │           │   └── route.ts  # Admin KPI aggregation
+│   │   │           ├── users/
+│   │   │           │   └── route.ts  # Admin user CRUD
+│   │   │           ├── analyses/
+│   │   │           │   └── route.ts  # Admin analysis browser
+│   │   │           ├── vocabulary/
+│   │   │           │   └── route.ts  # Admin vocabulary browser
+│   │   │           ├── feedback/
+│   │   │           │   └── route.ts  # Admin feedback management
+│   │   │           └── health/
+│   │   │               └── route.ts  # Backend health proxy
 │   │   ├── components/
 │   │   │   ├── auth/
-│   │   │   │   └── auth-modal.tsx  # Login/signup modal
+│   │   │   │   └── auth-modal.tsx    # Login/signup modal
+│   │   │   ├── feedback/
+│   │   │   │   └── feedback-form.tsx # Star rating + category feedback
 │   │   │   ├── flow/
-│   │   │   │   └── WordNode.tsx    # ReactFlow word node component
+│   │   │   │   └── WordNode.tsx      # ReactFlow word node component
 │   │   │   ├── gamification/
 │   │   │   │   ├── achievement-toast.tsx
 │   │   │   │   ├── history-panel.tsx
@@ -289,75 +406,92 @@ GrammarioNew/
 │   │   │   │   ├── HeroSection.tsx
 │   │   │   │   ├── PricingSection.tsx
 │   │   │   │   └── WhyChooseUsSection.tsx
-│   │   │   ├── providers.tsx       # QueryClient, AuthProvider, Toaster
-│   │   │   ├── LandingDemo.tsx     # Landing page demo component
-│   │   │   └── ui/                 # shadcn/ui-style components
+│   │   │   ├── providers.tsx         # QueryClient, AuthProvider, Toaster
+│   │   │   ├── LandingDemo.tsx       # Landing page demo
+│   │   │   └── ui/
+│   │   │       ├── app-navbar.tsx    # App shell navigation
 │   │   │       ├── button.tsx
 │   │   │       ├── card.tsx
 │   │   │       ├── footer.tsx
-│   │   │       ├── navbar.tsx
+│   │   │       ├── mermaid-diagram.tsx # Mermaid chart renderer
+│   │   │       ├── navbar.tsx        # Landing/marketing navigation
 │   │   │       ├── select.tsx
 │   │   │       ├── toggle.tsx
 │   │   │       └── toggle-group.tsx
 │   │   ├── lib/
-│   │   │   ├── api.ts              # Axios API client
-│   │   │   ├── auth-context.tsx    # Auth context provider
-│   │   │   ├── db.ts               # Database utilities
-│   │   │   ├── utils.ts            # Utility functions (cn)
+│   │   │   ├── api.ts                # Axios API client
+│   │   │   ├── admin.ts              # Admin role check (env-based)
+│   │   │   ├── auth-context.tsx      # Auth context provider
+│   │   │   ├── auth-fetch.ts         # Authenticated fetch with Bearer token
+│   │   │   ├── db.ts                 # Database utilities (save, query, etc.)
+│   │   │   ├── sm2.ts                # SM-2 spaced repetition algorithm
+│   │   │   ├── utils.ts              # Utility functions (cn)
 │   │   │   └── supabase/
-│   │   │       ├── client.ts       # Browser Supabase client
-│   │   │       ├── server.ts       # Server Supabase client (SSR)
-│   │   │       ├── middleware.ts   # Session refresh middleware
+│   │   │       ├── client.ts         # Browser Supabase client
+│   │   │       ├── server.ts         # Server Supabase client (SSR)
+│   │   │       ├── api.ts            # Supabase API helpers
+│   │   │       ├── middleware.ts      # Session refresh middleware
 │   │   │       └── database.types.ts # Generated TypeScript types
 │   │   ├── store/
-│   │   │   └── useAppStore.ts      # Zustand store with persistence
-│   │   └── middleware.ts           # Next.js middleware wrapper
-│   ├── public/                     # Static assets
-│   ├── Dockerfile                  # Frontend Docker image
-│   ├── package.json                # Node dependencies
-│   ├── next.config.ts              # Next.js configuration
-│   ├── tsconfig.json               # TypeScript configuration
-│   ├── eslint.config.mjs           # ESLint configuration
-│   ├── postcss.config.mjs          # PostCSS configuration
-│   └── vercel.json                 # Vercel deployment config
+│   │   │   └── useAppStore.ts        # Zustand store with persistence
+│   │   └── middleware.ts             # Next.js middleware wrapper
+│   ├── public/                       # Static assets (logo, banner, etc.)
+│   ├── Dockerfile                    # Frontend Docker image
+│   ├── package.json                  # Node dependencies
+│   ├── next.config.ts                # Next.js config (standalone output)
+│   ├── tsconfig.json                 # TypeScript config
+│   ├── eslint.config.mjs             # ESLint 9 + Next.js
+│   ├── postcss.config.mjs            # PostCSS + Tailwind v4
+│   └── vercel.json                   # Vercel deployment (region, headers)
 ├── deploy/
-│   ├── aws.md                      # AWS deployment guide
-│   ├── digitalocean.md             # DigitalOcean deployment guide
-│   └── setup-server.sh             # Server initialization script
+│   ├── aws.md                        # AWS deployment guide
+│   ├── digitalocean.md               # DigitalOcean deployment guide
+│   └── setup-server.sh               # Server initialization script
 ├── nginx/
-│   ├── nginx.conf                  # Production Nginx configuration
-│   └── nginx.initial.conf          # Initial config for SSL setup
+│   ├── nginx.conf                    # Production Nginx configuration
+│   └── nginx.initial.conf            # Initial config for SSL setup
 ├── supabase/
-│   └── schema.sql                  # Database schema with RLS
-├── video/                          # Remotion video generation
+│   └── schema.sql                    # Full database schema with RLS, pgvector, triggers
+├── video/                            # Remotion video generation
 │   ├── src/
-│   │   ├── components/             # Video components
-│   │   ├── compositions/           # Video compositions
-│   │   ├── scenes/                 # Video scenes
-│   │   ├── data/                   # Sentence data
-│   │   └── styles/                 # Global CSS
+│   │   ├── components/               # Video components
+│   │   ├── compositions/             # Video compositions
+│   │   ├── scenes/                   # Video scenes
+│   │   ├── data/                     # Sentence data
+│   │   └── styles/                   # Global CSS
 │   ├── package.json
 │   └── remotion.config.ts
 ├── docs/
-│   └── GOOGLE_OAUTH_SETUP.md       # Google OAuth setup guide
-├── docker-compose.yml              # Development Docker Compose
-├── docker-compose.prod.yml         # Production Docker Compose
-├── DEPLOYMENT.md                   # Main deployment documentation
-├── env.example                     # Example environment variables
-└── README.md                       # This file
+│   └── GOOGLE_OAUTH_SETUP.md         # Google OAuth setup guide
+├── docker-compose.yml                # Dev: Redis + backend + frontend
+├── docker-compose.prod.yml           # Prod: Redis + backend + nginx + certbot + watchtower
+├── DEPLOYMENT.md                     # Main deployment documentation
+├── env.example                       # Example environment variables
+└── README.md                         # This file
 ```
 
 ---
 
-## 💻 Frontend
+## Frontend
 
 ### Pages (App Router)
 
 | Route | File | Description |
 |-------|------|-------------|
 | `/` | `app/page.tsx` | Landing page with Hero, Features, Pricing, FAQ sections |
-| `/app` | `app/app/page.tsx` | Main dashboard - sentence analysis interface |
-| `/app/settings` | `app/app/settings/page.tsx` | User settings (daily goal, TTS, etc.) |
+| `/app` | `app/app/page.tsx` | App home — welcome hub with links to Analyze and Review |
+| `/app/analyze` | `app/app/analyze/page.tsx` | Main analysis interface — ReactFlow graph, pedagogical panel, difficulty, errors, feedback |
+| `/app/review` | `app/app/review/page.tsx` | Vocabulary review — SM-2 flashcards with quality ratings |
+| `/app/settings` | `app/app/settings/page.tsx` | User settings (daily goal, TTS, translations, etc.) |
+| `/admin` | `app/admin/page.tsx` | Admin overview — KPIs, language breakdown, recent activity |
+| `/admin/users` | `app/admin/users/page.tsx` | User management — search, filter, create, edit, delete |
+| `/admin/requests` | `app/admin/requests/page.tsx` | Analysis inspector — browse, deep-link, raw JSON, delete |
+| `/admin/vocabulary` | `app/admin/vocabulary/page.tsx` | Vocabulary browser — all users, paginated |
+| `/admin/feedback` | `app/admin/feedback/page.tsx` | Feedback manager — filter, resolve, annotate |
+| `/admin/backend` | `app/admin/backend/page.tsx` | Backend health — service status, memory, raw JSON |
+| `/terms` | `app/terms/page.tsx` | Terms of Service |
+| `/privacy` | `app/privacy/page.tsx` | Privacy Policy |
+| `/patch-notes` | `app/patch-notes/page.tsx` | Changelog with Mermaid diagrams and markdown |
 | `/auth/callback` | `app/auth/callback/page.tsx` | OAuth callback handler |
 | `/auth/error` | `app/auth/error/page.tsx` | Authentication error page |
 
@@ -365,9 +499,17 @@ GrammarioNew/
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/analyze` | POST | Proxies to Python NLP backend, handles rate limiting |
-| `/api/v1/languages` | GET | Returns list of supported languages with metadata |
+| `/api/v1/analyze` | POST | Proxies to Python NLP backend, handles auth and rate limiting |
+| `/api/v1/languages` | GET | Returns supported languages with metadata |
 | `/api/v1/usage` | GET | Returns user usage statistics (analyses today, limits) |
+| `/api/v1/vocabulary/review` | GET | Fetches due vocabulary words (limit 20) + review stats |
+| `/api/v1/vocabulary/review` | POST | Submits review quality (0–5), updates SM-2 scheduling |
+| `/api/v1/admin/stats` | GET | Aggregated KPIs (users, analyses, vocabulary, feedback counts) |
+| `/api/v1/admin/users` | GET/POST/PATCH/DELETE | Full user CRUD (admin only) |
+| `/api/v1/admin/analyses` | GET/DELETE | Browse and manage analyses (admin only) |
+| `/api/v1/admin/vocabulary` | GET | Paginated vocabulary for all users (admin only) |
+| `/api/v1/admin/feedback` | GET/PATCH | Browse, resolve, and annotate feedback (admin only) |
+| `/api/v1/admin/health` | GET | Proxies backend `/health` endpoint (admin only) |
 
 ### Components
 
@@ -384,6 +526,7 @@ GrammarioNew/
 - **StatsPanel** — XP, level, streak, daily goal progress
 - **HistoryPanel** — Recent analyses with favorites functionality
 - **AchievementToast** — Achievement unlock notifications
+- **FeedbackForm** — Star ratings (1–5), category chips, comments on analysis quality
 
 #### Auth
 - **AuthModal** — Login/signup modal with Google OAuth and email/password
@@ -394,8 +537,10 @@ GrammarioNew/
 - **Select** — Dropdown select with Radix UI primitives
 - **Toggle** — Toggle button with variants
 - **ToggleGroup** — Toggle group with single/multiple selection
-- **Navbar** — Navigation with auth state
-- **Footer** — Page footer
+- **Navbar** — Landing/marketing navigation with auth state
+- **AppNavbar** — App shell navigation (analyze, review, settings, admin)
+- **Footer** — Page footer with legal links
+- **MermaidDiagram** — Mermaid chart renderer for patch notes
 
 ### State Management
 
@@ -405,18 +550,18 @@ GrammarioNew/
 interface AppState {
   // UI State
   sidebarOpen: boolean;
-  
+
   // Current Analysis
   currentAnalysis: AnalysisResponse | null;
   recentAnalyses: AnalysisResponse[];  // In-memory, max 10
-  
+
   // User Preferences (persisted to localStorage)
   defaultLanguage: string;             // Default: "it"
   dailyGoalTarget: number;             // Default: 5
   showTranslations: boolean;           // Default: true
   enableSounds: boolean;               // Default: true
   enableTTS: boolean;                  // Default: true
-  
+
   // Onboarding
   hasCompletedOnboarding: boolean;
 }
@@ -441,6 +586,14 @@ interface AppState {
 7. Updates streak based on `last_active_date`
 8. Session stored in localStorage (client) and cookies (SSR)
 
+#### Authenticated API Calls (`authFetch`)
+
+All protected API routes use `authFetch`, which retrieves the Supabase session and attaches `Authorization: Bearer <access_token>` to each request. Server-side route handlers call `getAuthenticatedClient` to create a Supabase client scoped to the authenticated user's RLS context.
+
+#### Admin Authorization
+
+Admin access is controlled via the `NEXT_PUBLIC_ADMIN_USER_ID` environment variable. The `isAdmin(userId)` function checks if the current user's ID matches. The admin layout (`/admin/layout.tsx`) redirects non-admin users.
+
 ### Styling
 
 **Tailwind CSS v4** with CSS variables:
@@ -461,9 +614,10 @@ interface AppState {
 --warning: amber
 ```
 
-**Typography**:
-- Headings: Space Grotesk
-- Monospace: JetBrains Mono
+**Typography (Google Fonts)**:
+- Body: Plus Jakarta Sans (`--font-plus-jakarta`)
+- Serif Headings: Instrument Serif (`--font-instrument-serif`)
+- Monospace: JetBrains Mono (`--font-mono`)
 
 **Design Features**:
 - Dark theme by default
@@ -471,33 +625,40 @@ interface AppState {
 - Radial gradients
 - Backdrop blur effects
 - Custom animations (accordion, shimmer, pulse glow)
+- `@tailwindcss/typography` for prose content in patch notes and legal pages
 
 ---
 
-## 🐍 Backend
+## Backend
 
 ### Application Structure
 
 ```
 app/
-├── main.py              # FastAPI app, CORS, lifespan events
-├── api/routes.py        # /analyze, /languages endpoints
+├── main.py                # FastAPI app, CORS, lifespan events
+├── api/routes.py          # /analyze, /embed, /languages, /cache/*
 ├── core/
-│   ├── config.py        # Pydantic Settings
-│   └── security.py      # Input sanitization
-├── models/schemas.py    # Pydantic models
+│   ├── config.py          # Pydantic Settings
+│   └── security.py        # Input sanitization
+├── models/schemas.py      # Pydantic models
 └── services/
-    ├── nlp.py           # NLP orchestration
-    ├── llm_service.py   # LLM integration
-    ├── stanza_manager.py # Pipeline management
-    └── strategies/      # Language-specific processing
+    ├── nlp.py             # NLP orchestration (parallel async pipeline)
+    ├── llm_service.py     # LLM integration
+    ├── spacy_manager.py   # spaCy pipeline management (primary)
+    ├── stanza_manager.py  # Stanza pipeline management (fallback)
+    ├── embeddings.py      # sentence-transformers (384-dim)
+    ├── difficulty_scorer.py # CEFR A1–C2 scoring
+    ├── error_detector.py  # Rule-based grammar checking
+    ├── frequency.py       # Lemma frequency bands (1–5)
+    ├── cache.py           # Redis caching
+    └── strategies/        # Language-specific processing
 ```
 
 ### API Endpoints
 
 #### `POST /api/v1/analyze`
 
-Analyzes a sentence using Stanza NLP with language-specific strategies.
+Analyzes a sentence using spaCy/Stanza with language-specific strategies, LLM explanations, embeddings, difficulty scoring, and error detection.
 
 **Request:**
 ```json
@@ -527,7 +688,6 @@ Analyzes a sentence using Stanza NLP with language-specific strategies.
       "misc": null,
       "segments": null
     }
-    // ... more tokens
   ],
   "pedagogical_data": {
     "translation": "The cat eats the fish.",
@@ -535,7 +695,7 @@ Analyzes a sentence using Stanza NLP with language-specific strategies.
     "concepts": [
       {
         "name": "Definite Articles",
-        "description": "Italian uses definite articles (il, la, i, le) based on gender and number.",
+        "description": "Italian uses definite articles based on gender and number.",
         "related_words": ["il", "la", "i", "le", "lo", "gli"]
       }
     ],
@@ -547,8 +707,23 @@ Analyzes a sentence using Stanza NLP with language-specific strategies.
         "rule": "-are verbs: -o, -i, -a, -iamo, -ate, -ano",
         "examples": ["parlo (I speak)", "mangi (you eat)", "lavora (he works)"]
       }
-    ]
-  }
+    ],
+    "errors": []
+  },
+  "difficulty": {
+    "level": "A2",
+    "score": 0.22,
+    "features": {
+      "sentence_length": 6,
+      "avg_word_length": 3.5,
+      "tree_depth": 2,
+      "subordinate_clause_count": 0,
+      "type_token_ratio": 0.83,
+      "lexical_density": 0.33
+    }
+  },
+  "grammar_errors": [],
+  "embedding": [0.012, -0.034, ...]
 }
 ```
 
@@ -556,6 +731,27 @@ Analyzes a sentence using Stanza NLP with language-specific strategies.
 - Max text length: 1000 characters
 - Supported languages: `it`, `es`, `de`, `ru`, `tr`
 - Input sanitization (null byte removal, whitespace trimming)
+
+#### `POST /api/v1/embed`
+
+Generates a 384-dimensional sentence embedding.
+
+**Request:**
+```json
+{
+  "text": "Il gatto mangia il pesce.",
+  "language": "it"
+}
+```
+
+**Response:**
+```json
+{
+  "text": "Il gatto mangia il pesce.",
+  "embedding": [0.012, -0.034, ...],
+  "dimension": 384
+}
+```
 
 #### `GET /api/v1/languages`
 
@@ -565,42 +761,36 @@ Returns supported languages with metadata.
 ```json
 {
   "languages": [
-    {
-      "code": "it",
-      "name": "Italian",
-      "native_name": "Italiano",
-      "family": "Romance",
-      "sample": "Il gatto mangia il pesce."
-    },
-    {
-      "code": "es",
-      "name": "Spanish",
-      "native_name": "Español",
-      "family": "Romance",
-      "sample": "El gato come el pescado."
-    },
-    {
-      "code": "de",
-      "name": "German",
-      "native_name": "Deutsch",
-      "family": "Germanic",
-      "sample": "Die Katze frisst den Fisch."
-    },
-    {
-      "code": "ru",
-      "name": "Russian",
-      "native_name": "Русский",
-      "family": "Slavic",
-      "sample": "Кошка ест рыбу."
-    },
-    {
-      "code": "tr",
-      "name": "Turkish",
-      "native_name": "Türkçe",
-      "family": "Turkic",
-      "sample": "Kedi balığı yiyor."
-    }
+    { "code": "it", "name": "Italian", "native_name": "Italiano", "family": "Romance", "sample": "Il gatto mangia il pesce." },
+    { "code": "es", "name": "Spanish", "native_name": "Español", "family": "Romance", "sample": "El gato come el pescado." },
+    { "code": "de", "name": "German", "native_name": "Deutsch", "family": "Germanic", "sample": "Die Katze frisst den Fisch." },
+    { "code": "ru", "name": "Russian", "native_name": "Русский", "family": "Slavic", "sample": "Кошка ест рыбу." },
+    { "code": "tr", "name": "Turkish", "native_name": "Türkçe", "family": "Turkic", "sample": "Kedi balığı yiyor." }
   ]
+}
+```
+
+#### `GET /api/v1/cache/stats`
+
+Returns Redis cache statistics.
+
+**Response:**
+```json
+{
+  "hits": 142,
+  "misses": 58,
+  "hit_rate": 0.71
+}
+```
+
+#### `POST /api/v1/cache/flush`
+
+Flushes all cached analyses.
+
+**Response:**
+```json
+{
+  "flushed": 200
 }
 ```
 
@@ -608,100 +798,127 @@ Returns supported languages with metadata.
 
 Health check endpoint.
 
-**Response:**
-```json
-{
-  "status": "ok",
-  "app": "Grammario NLP Engine",
-  "version": "1.0.0"
-}
-```
-
 #### `GET /health`
 
-Detailed health check with service status.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "version": "1.0.0",
-  "services": {
-    "llm": true
-  },
-  "models": {
-    "loaded": ["it", "de"],
-    "max_loaded": 5,
-    "supported": ["it", "es", "de", "ru", "tr"]
-  }
-}
-```
+Detailed health check with service status, loaded models, and supported languages.
 
 #### `POST /warmup/{language}`
 
-Pre-loads a Stanza model for faster first requests.
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "language": "it",
-  "loaded_models": ["it"]
-}
-```
+Pre-loads an NLP model for faster first requests.
 
 ### Services
 
 #### NLPService (`nlp.py`)
 
-Main orchestration service that coordinates Stanza processing and LLM explanations.
+Main orchestration service with parallel async execution.
 
-```python
-class NLPService:
-    def __init__(self):
-        self.stanza_manager = StanzaManager()
-        self.llm_service = LLMService()
-        self.strategies = {
-            'it': RomanceStrategy('it'),
-            'es': RomanceStrategy('es'),
-            'de': InflectionStrategy(),
-            'ru': InflectionStrategy(),
-            'tr': AgglutinativeStrategy()
-        }
-    
-    async def analyze_text(self, text: str, lang_code: str) -> SentenceAnalysis:
-        # 1. Get Stanza pipeline (LRU cached)
-        # 2. Process text with Stanza
-        # 3. Apply language-specific strategy
-        # 4. Fetch pedagogical data from LLM
-        # 5. Construct and return SentenceAnalysis
-```
+**Pipeline** (`analyze_text_async`):
+1. Validates language against registered strategies
+2. Checks Redis cache (SHA-256 hash of `language:normalized_text`)
+3. Runs three tasks in parallel via `asyncio.gather`:
+   - **NLP Pipeline**: spaCy (preferred, `PREFERRED_ENGINE=spacy`) with Stanza fallback
+   - **LLM Service**: Generates pedagogical explanations
+   - **Embedding Service**: Generates 384-dim sentence vector
+4. Post-processes: difficulty scoring, rule-based error detection
+5. Caches result in Redis (embedding stripped to save space)
+
+**Engine Selection**: Controlled by `PREFERRED_ENGINE` env var. spaCy is preferred for CPU performance; Stanza is used as fallback or for Turkish (not supported by spaCy models).
+
+#### SpacyManager (`spacy_manager.py`)
+
+Manages spaCy pipelines with LRU eviction.
+
+- **Supported**: Italian, Spanish, German, Russian (`*_core_news_md` models)
+- **Max Models**: 5 (configurable via `MAX_LOADED_MODELS`)
+- **Auto-Download**: Downloads models on first use via `spacy.cli.download`
 
 #### StanzaManager (`stanza_manager.py`)
 
-Singleton managing Stanza pipelines with LRU eviction.
+Manages Stanza pipelines with LRU eviction (fallback engine).
 
-**Features:**
-- **LRU Eviction**: Keeps max 5 models loaded (configurable via `MAX_LOADED_MODELS`)
+- **Supported**: Italian, Spanish, German, Russian, Turkish
 - **Lazy Loading**: Downloads models on first use
-- **Memory Management**: Garbage collection after eviction
 - **Language-specific Processors**:
   - Italian/Spanish/German/Turkish: `tokenize,mwt,pos,lemma,depparse`
   - Russian: `tokenize,pos,lemma,depparse` (no MWT)
-  - Turkish: `tokenize_no_ssplit=True` (no sentence splitting)
+
+#### EmbeddingService (`embeddings.py`)
+
+Multilingual sentence embeddings via sentence-transformers.
+
+- **Model**: `paraphrase-multilingual-MiniLM-L12-v2` (configurable via `EMBEDDING_MODEL`)
+- **Dimension**: 384, L2-normalized
+- **Methods**: `encode`, `encode_batch`, `cosine_similarity`, `find_similar`
+
+#### DifficultyScorer (`difficulty_scorer.py`)
+
+CEFR A1–C2 difficulty classification from engineered linguistic features.
+
+**Features extracted:**
+- Sentence length, average word length
+- Type-token ratio (TTR)
+- Dependency tree depth and width (BFS traversal)
+- Subordinate clause count (UD subordination relations)
+- Average morphological complexity (from UD `feats`)
+- Unique POS count, lexical density
+
+**Score mapping:**
+
+| Score Range | CEFR Level |
+|-------------|------------|
+| < 0.15 | A1 |
+| < 0.30 | A2 |
+| < 0.45 | B1 |
+| < 0.60 | B2 |
+| < 0.78 | C1 |
+| >= 0.78 | C2 |
+
+#### ErrorDetector (`error_detector.py`)
+
+Rule-based grammar error detection by language family.
+
+| Language | Checks |
+|----------|--------|
+| Italian, Spanish | DET/ADJ → NOUN gender/number agreement |
+| German, Russian | ADJ → NOUN case/gender agreement |
+| Turkish | Vowel harmony heuristic (lemma vs suffix) |
+| All | Subject → verb number/person agreement |
+
+**Output**: `GrammarError` with word, error_type, severity (`info`/`warning`/`error`), message, optional correction and rule.
+
+#### FrequencyService (`frequency.py`)
+
+Lemma frequency bands from JSON maps per language.
+
+| Rank | Band | Label |
+|------|------|-------|
+| <= 500 | 1 | Very common |
+| <= 2000 | 2 | Common |
+| <= 5000 | 3 | Moderate |
+| <= 10000 | 4 | Uncommon |
+| > 10000 | 5 | Rare |
+
+#### CacheService (`cache.py`)
+
+Redis-backed analysis caching.
+
+- **TTL**: 24 hours (86400 seconds)
+- **Key Format**: `grammario:analysis:<sha256(language:text)[:16]>`
+- **Connection**: `REDIS_URL` env var, 2s timeouts, retry on timeout
+- **Operations**: `get`, `set`, `flush`, `stats` (hits, misses, hit rate)
 
 #### LLMService (`llm_service.py`)
 
 Generates pedagogical explanations using LLMs.
 
-**Features:**
 - **Providers**: OpenRouter (primary), OpenAI (fallback)
 - **Default Model**: `google/gemini-2.0-flash-exp:free`
 - **Caching**: Manual cache (100 entries, evicts oldest 50 when full)
 - **JSON Mode**: Tries JSON mode first, falls back to regular completion
-- **Language-specific Prompts**: Tailored for each language's grammar features
+- **Language-specific Prompts**: Tailored for each language's grammar focus
 
 **Prompt Focus by Language:**
+
 | Language | Grammar Focus |
 |----------|---------------|
 | Italian | Clitics, auxiliary selection (essere/avere), gender/number agreement, articles |
@@ -717,7 +934,7 @@ Strategy pattern for language-specific processing:
 #### RomanceStrategy (Italian, Spanish)
 - Handles clitics and MWT (multi-word token) expansion
 - Gender/number agreement tracking
-- Manual lemma overrides for known Stanza errors
+- Manual lemma overrides for known errors
 - Filters punctuation tokens
 
 #### InflectionStrategy (German, Russian)
@@ -728,29 +945,22 @@ Strategy pattern for language-specific processing:
 
 #### AgglutinativeStrategy (Turkish)
 - Complex morpheme segmentation
-- Handles:
-  - Case suffixes (dative, locative, ablative, accusative, genitive, instrumental)
-  - Possessive suffixes (1sg, 2sg, 3sg, 1pl, 2pl, 3pl)
-  - Verb tense/aspect (present continuous, aorist, past, future, conditional, necessity)
-  - Person suffixes
-  - Buffer consonants (`n` between vowels)
-  - Consonant softening (k→ğ, p→b, t→d, ç→c)
-  - Vowel harmony
+- Handles: case suffixes, possessive suffixes, verb tense/aspect, person suffixes, buffer consonants, consonant softening, vowel harmony
 
 ### Pydantic Schemas (`schemas.py`)
 
 ```python
 class TokenNode(BaseModel):
-    id: int                           # 1-based index
-    text: str                         # Original word form
-    lemma: Optional[str]              # Dictionary form
-    upos: Optional[str]               # Universal POS tag
-    xpos: Optional[str]               # Language-specific POS
-    feats: Optional[str]              # Morphological features
-    head_id: Optional[int]            # Syntactic head ID (0 = root)
-    deprel: Optional[str]             # Dependency relation
+    id: int
+    text: str
+    lemma: Optional[str]
+    upos: Optional[str]
+    xpos: Optional[str]
+    feats: Optional[str]
+    head_id: Optional[int]
+    deprel: Optional[str]
     misc: Optional[str]
-    segments: Optional[List[str]]     # Morpheme segments (Turkish)
+    segments: Optional[List[str]]       # Morpheme segments (Turkish)
 
 class GrammarConcept(BaseModel):
     name: str
@@ -759,21 +969,47 @@ class GrammarConcept(BaseModel):
 
 class GrammarTip(BaseModel):
     word: str
-    question: str                     # e.g., "Why -a at the end?"
+    question: str
     explanation: str
     rule: Optional[str]
     examples: Optional[List[str]]
+
+class LLMGrammarError(BaseModel):
+    # LLM-detected grammar issues
+    ...
 
 class PedagogicalData(BaseModel):
     translation: str
     nuance: Optional[str]
     concepts: List[GrammarConcept]
     tips: Optional[List[GrammarTip]]
+    errors: Optional[List[LLMGrammarError]]
+
+class RuleBasedError(BaseModel):
+    word: str
+    word_id: int
+    error_type: str
+    severity: str                        # info, warning, error
+    message: str
+    correction: Optional[str]
+    rule: Optional[str]
+
+class DifficultyInfo(BaseModel):
+    level: str                           # A1–C2
+    score: float                         # 0.0–1.0
+    features: Optional[dict]             # Linguistic feature breakdown
 
 class SentenceAnalysis(BaseModel):
     metadata: SentenceMetadata
     nodes: List[TokenNode]
     pedagogical_data: Optional[PedagogicalData]
+    difficulty: Optional[DifficultyInfo]
+    grammar_errors: Optional[List[RuleBasedError]]
+    embedding: Optional[List[float]]     # 384-dim vector
+
+class AnalysisRequest(BaseModel):
+    text: str
+    language: str                        # Regex: ^(it|es|de|ru|tr)$
 ```
 
 ### Configuration (`config.py`)
@@ -785,22 +1021,33 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    
+
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
-    
+
     # LLM
     OPENROUTER_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     LLM_MODEL: str = "google/gemini-2.0-flash-exp:free"
-    
+
     # Stanza
     STANZA_RESOURCES_DIR: Optional[str] = None
 ```
 
+Additional env vars used by individual services (not in `Settings`):
+- `PREFERRED_ENGINE` — `spacy` (default) or `stanza`
+- `REDIS_URL` — Redis connection string (default `redis://localhost:6379/0`)
+- `EMBEDDING_MODEL` — sentence-transformers model name
+- `MAX_LOADED_MODELS` — Max NLP models in memory (default 5)
+
 ---
 
-## 🗄 Database Schema
+## Database Schema
+
+### Extensions
+
+- **uuid-ossp** — UUID generation
+- **vector** (pgvector) — 384-dimensional embedding storage and similarity search
 
 ### Tables
 
@@ -814,9 +1061,13 @@ User profiles linked to Supabase Auth.
 | `display_name` | TEXT | Display name |
 | `avatar_url` | TEXT | Profile picture URL |
 | `is_pro` | BOOLEAN | Pro subscription status |
+| `account_type` | TEXT | `regular` or `test` (default: `regular`) |
+| `daily_sentence_limit` | INTEGER | Max analyses per day (default: 50) |
+| `account_expires_at` | TIMESTAMPTZ | Account expiry (nullable, for test accounts) |
+| `admin_notes` | TEXT | Internal admin notes |
 | `stripe_customer_id` | TEXT | Stripe customer ID |
 | `stripe_subscription_id` | TEXT | Stripe subscription ID |
-| `subscription_status` | TEXT | active, canceled, past_due |
+| `subscription_status` | TEXT | active, canceled, past_due, trialing |
 | `subscription_ends_at` | TIMESTAMPTZ | Subscription expiry |
 | `xp` | INTEGER | Experience points (default: 0) |
 | `level` | INTEGER | Current level (default: 1) |
@@ -825,10 +1076,12 @@ User profiles linked to Supabase Auth.
 | `last_active_date` | DATE | Last activity date |
 | `total_analyses` | INTEGER | Total analyses count |
 | `created_at` | TIMESTAMPTZ | Account creation |
-| `updated_at` | TIMESTAMPTZ | Last update |
+| `updated_at` | TIMESTAMPTZ | Last update (auto-trigger) |
+
+**Indexes:** `account_type`, partial index on `account_expires_at IS NOT NULL`
 
 #### `analyses`
-Stored sentence analyses.
+Stored sentence analyses with vector embeddings.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -837,13 +1090,16 @@ Stored sentence analyses.
 | `text` | TEXT | Analyzed sentence |
 | `language` | TEXT | Language code (it/es/de/ru/tr) |
 | `translation` | TEXT | English translation |
-| `nodes` | JSONB | Full analysis data |
+| `nodes` | JSONB | Full analysis token data |
 | `pedagogical_data` | JSONB | LLM explanations |
+| `difficulty_level` | TEXT | CEFR level (A1–C2) |
+| `difficulty_score` | REAL | Raw difficulty score (0–1) |
+| `embedding` | vector(384) | Sentence embedding for similarity search |
 | `is_favorite` | BOOLEAN | Favorited status |
 | `notes` | TEXT | User notes |
 | `created_at` | TIMESTAMPTZ | Analysis timestamp |
 
-**Indexes:** user+date, user+language, user+favorite
+**Indexes:** user+date, user+language, user+favorite, `difficulty_level`, IVFFlat on `embedding` (cosine, 100 lists)
 
 #### `vocabulary`
 Spaced repetition vocabulary tracking (SM-2 algorithm).
@@ -852,16 +1108,17 @@ Spaced repetition vocabulary tracking (SM-2 algorithm).
 |--------|------|-------------|
 | `id` | UUID | Primary key |
 | `user_id` | UUID | References `users.id` |
+| `analysis_id` | UUID | References `analyses.id` (nullable) |
 | `word` | TEXT | Surface form |
 | `lemma` | TEXT | Dictionary form |
 | `translation` | TEXT | English translation |
 | `language` | TEXT | Language code |
-| `pos` | TEXT | Part of speech |
+| `part_of_speech` | TEXT | Part of speech |
 | `context` | TEXT | Example sentence |
-| `mastery` | INTEGER | Mastery level (0-100) |
+| `mastery` | INTEGER | Mastery level (0–100) |
 | `ease_factor` | REAL | SM-2 ease factor (default: 2.5) |
 | `interval_days` | INTEGER | Days until next review |
-| `next_review` | TIMESTAMPTZ | Next review date |
+| `next_review` | DATE | Next review date |
 | `review_count` | INTEGER | Total reviews |
 | `created_at` | TIMESTAMPTZ | Word added |
 
@@ -878,7 +1135,6 @@ Daily learning targets.
 | `target` | INTEGER | Target analyses |
 | `completed` | INTEGER | Completed analyses |
 | `is_achieved` | BOOLEAN | Goal met |
-| `created_at` | TIMESTAMPTZ | Record creation |
 
 **Constraint:** Unique (user_id, date)
 
@@ -898,8 +1154,8 @@ Static achievement definitions.
 **Seeded Achievements:**
 - `first_analysis` — First Steps (1 analysis)
 - `analyses_10`, `analyses_50`, `analyses_100`, `analyses_500` — Milestones
-- `streak_3`, `streak_7`, `streak_30` — Streak achievements
-- `vocabulary_10`, `vocabulary_50`, `vocabulary_100` — Vocabulary milestones
+- `streak_3`, `streak_7`, `streak_30`, `streak_100` — Streak achievements
+- `vocab_25`, `vocab_100` — Vocabulary milestones
 - `level_5`, `level_10` — Level achievements
 - `polyglot_2`, `polyglot_5` — Multi-language achievements
 
@@ -914,12 +1170,36 @@ Junction table for unlocked achievements.
 
 **Primary Key:** (user_id, achievement_id)
 
+#### `sentence_feedback`
+User feedback on analysis quality.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | References `users.id` |
+| `analysis_id` | UUID | References `analyses.id` |
+| `sentence_text` | TEXT | The analyzed sentence |
+| `language` | TEXT | Language code |
+| `rating` | INTEGER | Star rating (1–5) |
+| `category` | TEXT | Feedback category |
+| `comment` | TEXT | Optional comment |
+| `is_resolved` | BOOLEAN | Admin resolution status |
+| `admin_notes` | TEXT | Admin notes |
+| `created_at` | TIMESTAMPTZ | Feedback timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update (auto-trigger) |
+
+**Indexes:** user, analysis, category, unresolved partial index
+
+### SQL Functions
+
+#### `match_analyses(query_embedding, match_user_id, ...)`
+Cosine similarity search over analysis embeddings. Used for finding similar sentences a user has previously analyzed.
+
 ### Row Level Security (RLS)
 
 All tables have RLS enabled with policies ensuring users can only access their own data:
 
 ```sql
--- Example: users table
 CREATE POLICY "Users can view own profile" ON users
   FOR SELECT USING (auth.uid() = id);
 
@@ -927,25 +1207,51 @@ CREATE POLICY "Users can update own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 ```
 
-**Exception:** `achievements` table is readable by all (static data).
+- **`achievements`** — Readable by all (static data)
+- **`sentence_feedback`** — Full CRUD for own feedback only
 
 ### Triggers
 
-- **`handle_new_user()`** — Auto-creates user profile on signup
-- **`update_updated_at()`** — Auto-updates `updated_at` timestamp
+- **`handle_new_user()`** — Auto-creates user profile on signup (triggered by `auth.users` insert)
+- **`update_updated_at()`** — Auto-updates `updated_at` timestamp on `users` and `sentence_feedback`
 
 ---
 
-## 🚀 Deployment
+## Admin Dashboard
+
+The admin panel is accessible at `/admin` and restricted to the user ID specified in `NEXT_PUBLIC_ADMIN_USER_ID`.
+
+### Features
+
+| Page | Description |
+|------|-------------|
+| **Overview** | KPI cards (total users, analyses, vocabulary, feedback), language breakdown chart, recent analyses, recent sign-ups |
+| **Users** | Paginated user list with search, account type filter, inline editing (display name, account type, limits, notes), create new users, delete users |
+| **Requests & Data** | Browse all analyses with language/user filters, deep-link by analysis ID, expandable sections, raw JSON viewer, delete analyses |
+| **Vocabulary** | Paginated view of all vocabulary entries across all users |
+| **Feedback** | Filter by category and resolution status, summary statistics, resolve feedback, add admin notes |
+| **Backend** | Live health check to FastAPI `/health` endpoint, service status cards (NLP, LLM, embeddings, Redis), memory usage, raw JSON toggle |
+
+### Admin API Architecture
+
+Admin API routes are Next.js route handlers that:
+1. Verify the caller's Supabase auth token
+2. Check `user.id === ADMIN_USER_ID`
+3. Use `getAdminClient()` (service role) for cross-user operations
+4. Return 403 for non-admin users
+
+---
+
+## Deployment
 
 ### Architecture Overview
 
 | Component | Platform | Cost |
 |-----------|----------|------|
 | Frontend | Vercel (free tier) | $0 |
-| Backend | DigitalOcean Droplet | $12-18/month |
+| Backend | DigitalOcean Droplet | $12–18/month |
 | Database | Supabase (free tier) | $0 |
-| **Total** | | **~$12-18/month** |
+| **Total** | | **~$12–18/month** |
 
 ### Docker Configuration
 
@@ -953,16 +1259,26 @@ CREATE POLICY "Users can update own profile" ON users
 
 ```yaml
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PREFERRED_ENGINE=spacy
       - OPENROUTER_KEY
       - CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - redis
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      
+
   frontend:
     build: ./frontend
     ports:
@@ -976,6 +1292,14 @@ services:
 
 ```yaml
 services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
   backend:
     build:
       context: ./backend
@@ -983,12 +1307,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3500M
+          memory: 6144M
         reservations:
-          memory: 1024M
+          memory: 2048M
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       start_period: 300s  # 5 minutes for model loading
-      
+
   nginx:
     image: nginx:alpine
     ports:
@@ -997,11 +1324,26 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./certbot/conf:/etc/letsencrypt
-      
+
   certbot:
     image: certbot/certbot
     # Auto-renewal every 12 hours
+
+  watchtower:        # Optional auto-update profile
+    image: containrrr/watchtower
+    profiles: [autoupdate]
 ```
+
+### Vercel Configuration (`vercel.json`)
+
+- **Framework**: Next.js
+- **Region**: `iad1` (US East)
+- **Security Headers**:
+  - `X-Frame-Options: DENY`
+  - `X-Content-Type-Options: nosniff`
+  - `X-XSS-Protection: 1; mode=block`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy`: geolocation, microphone, camera disabled
 
 ### Production Dockerfile (`Dockerfile.prod`)
 
@@ -1011,7 +1353,7 @@ Multi-stage build for optimized image:
 # Builder stage
 FROM python:3.11-slim AS builder
 # Install dependencies
-# Download Stanza models during build
+# Download spaCy/Stanza models during build
 
 # Production stage
 FROM python:3.11-slim
@@ -1023,25 +1365,33 @@ FROM python:3.11-slim
 
 ### GitHub Actions CI/CD (`.github/workflows/deploy.yml`)
 
+**Triggers**: Push to `main`, manual `workflow_dispatch`
+
 ```yaml
 jobs:
   test:
-    # Run pytest on backend
-    
+    # Install pytest, pytest-asyncio, httpx
+    # Run pytest on backend (non-blocking: || true)
+
   build:
-    # Build Docker image
+    # Build Docker image with Dockerfile.prod
     # Push to GitHub Container Registry (GHCR)
-    
+    # Uses GHA layer caching
+
   deploy:
-    # SSH to DigitalOcean
-    # Pull latest image
-    # Restart services
-    # Health check verification
+    # SSH to DigitalOcean (appleboy/ssh-action)
+    # git pull, docker login to GHCR
+    # docker pull latest backend image
+    # docker compose up -d --force-recreate backend (backend only)
+    # Prune old images
+    # Health check verification via curl
+
+  notify:
+    # Runs on failure (placeholder for Slack/Discord)
 ```
 
 ### Nginx Configuration
 
-**Features:**
 - Rate limiting: 10 req/s with 20 burst (API endpoints)
 - Connection limit: 10 per IP
 - Gzip compression (level 6)
@@ -1053,7 +1403,6 @@ jobs:
 
 1. **Prepare Server** (DigitalOcean)
    ```bash
-   # Run setup script
    curl -sSL https://raw.githubusercontent.com/.../setup-server.sh | bash
    ```
 
@@ -1083,7 +1432,6 @@ jobs:
 
 6. **Update CORS Origins**
    ```bash
-   # In .env
    CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
    ```
 
@@ -1091,7 +1439,7 @@ See `DEPLOYMENT.md` for detailed instructions.
 
 ---
 
-## 🎬 Video Generation System
+## Video Generation System
 
 The `/video` directory contains a Remotion-based video generation system for creating promotional videos.
 
@@ -1105,17 +1453,11 @@ Generates demo videos in two formats:
 
 | Scene | Duration | Content |
 |-------|----------|---------|
-| Hook | 0-3.5s | "What if you could see grammar?" |
-| Problem | 3.5-9s | Generic apps only show labels |
-| Solution | 9-24s | Grammario demo with Italian sentence |
-| Contrast | 24-35s | German accusative case explanation |
-| CTA | 35-45s | 5 languages, sign-up call-to-action |
-
-### Tech Stack
-
-- **Remotion** 4.0.232 — React-based video creation
-- **React** 18.3.1
-- **TypeScript** 5.6.3
+| Hook | 0–3.5s | "What if you could see grammar?" |
+| Problem | 3.5–9s | Generic apps only show labels |
+| Solution | 9–24s | Grammario demo with Italian sentence |
+| Contrast | 24–35s | German accusative case explanation |
+| CTA | 35–45s | 5 languages, sign-up call-to-action |
 
 ### Components
 
@@ -1152,7 +1494,7 @@ npm run build:all       # Both formats
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 ### Frontend (`frontend/.env.local`)
 
@@ -1160,49 +1502,62 @@ npm run build:all       # Both formats
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...       # Admin operations (user CRUD)
+
+# Admin
+NEXT_PUBLIC_ADMIN_USER_ID=your-uuid    # Admin dashboard access
 
 # Backend API
-API_URL=http://127.0.0.1:8000   # Development
-# API_URL=https://api.yourdomain.com  # Production
+API_URL=http://127.0.0.1:8000          # Development
+# API_URL=https://api.yourdomain.com   # Production
 ```
 
 ### Backend (`backend/.env`)
 
 ```bash
 # LLM Configuration
-OPENROUTER_KEY=sk-or-...         # Required (get from openrouter.ai)
-OPENAI_API_KEY=sk-...            # Optional fallback
+OPENROUTER_KEY=sk-or-...               # Required (get from openrouter.ai)
+OPENAI_API_KEY=sk-...                  # Optional fallback
 LLM_MODEL=google/gemini-2.0-flash-exp:free  # Default model
 
-# Supabase (for future JWT verification)
+# NLP Engine
+PREFERRED_ENGINE=spacy                  # spacy (default) or stanza
+MAX_LOADED_MODELS=5                     # Max models in memory
+
+# Embeddings
+EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2  # Default
+
+# Redis
+REDIS_URL=redis://localhost:6379/0      # Set automatically in Docker
+
+# Supabase
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_JWT_SECRET=your-jwt-secret
 
 # App Configuration
-DEBUG=false                       # Enable /docs endpoint
+DEBUG=false                             # Enable /docs endpoint
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 # Stanza
 STANZA_RESOURCES_DIR=/app/stanza_resources  # Optional custom path
-MAX_LOADED_MODELS=5               # Max models in memory
-PRELOAD_MODELS=true               # Pre-load models on startup
+PRELOAD_MODELS=true                     # Pre-load models on startup
 ```
 
 ### Production Additional
 
 ```bash
-# CORS (production)
 CORS_ORIGINS=https://grammario.ai,https://www.grammario.ai
 ```
 
 ---
 
-## 🛠 Development Setup
+## Development Setup
 
 ### Prerequisites
 
 - Node.js 20+
 - Python 3.11+
+- Redis (or Docker for containerized Redis)
 - [Supabase Account](https://supabase.com) (free tier)
 - [OpenRouter API Key](https://openrouter.ai) (for LLM)
 
@@ -1228,7 +1583,7 @@ npm install
 1. Create a new Supabase project
 2. Go to SQL Editor and run `supabase/schema.sql`
 3. Enable Google OAuth in Authentication → Providers (see `docs/GOOGLE_OAUTH_SETUP.md`)
-4. Copy your project URL and anon key
+4. Copy your project URL, anon key, and service role key
 
 ### 3. Configure Environment
 
@@ -1238,9 +1593,19 @@ cp env.example backend/.env
 cd frontend && cp .env.example .env.local
 ```
 
-Fill in your credentials.
+Fill in your credentials (Supabase URL, keys, OpenRouter key, admin user ID).
 
-### 4. Run Development Servers
+### 4. Start Redis
+
+```bash
+# Option A: Docker
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Option B: Use docker-compose (starts all services)
+docker compose up redis -d
+```
+
+### 5. Run Development Servers
 
 ```bash
 # Terminal 1: Backend
@@ -1257,7 +1622,7 @@ npm run dev
 - Backend API: http://localhost:8000
 - API Docs (DEBUG=true): http://localhost:8000/docs
 
-### 5. Download Stanza Models (Optional)
+### 6. Download NLP Models (Optional)
 
 Models are lazy-loaded on first use. To pre-download:
 
@@ -1268,7 +1633,7 @@ python download_models.py
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Backend Tests
 
@@ -1310,8 +1675,16 @@ curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{"text": "Il gatto mangia.", "language": "it"}'
 
+# Test embedding endpoint
+curl -X POST http://localhost:8000/api/v1/embed \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Il gatto mangia.", "language": "it"}'
+
 # Test languages endpoint
 curl http://localhost:8000/api/v1/languages
+
+# Cache stats
+curl http://localhost:8000/api/v1/cache/stats
 
 # Health check
 curl http://localhost:8000/health
@@ -1319,7 +1692,7 @@ curl http://localhost:8000/health
 
 ---
 
-## 🎯 Roadmap
+## Roadmap
 
 - [ ] More languages (French, Portuguese, Japanese, Chinese)
 - [ ] Mobile app (React Native)
@@ -1329,10 +1702,12 @@ curl http://localhost:8000/health
 - [ ] Browser extension
 - [ ] Offline mode
 - [ ] Voice input
+- [ ] Trained ML difficulty model (scikit-learn, replacing heuristic scorer)
+- [ ] Stripe checkout integration for Pro subscriptions
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome! Please:
 
@@ -1350,14 +1725,14 @@ Contributions welcome! Please:
 
 ---
 
-## 📄 License
+## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  <p>Built with ❤️ for language learners</p>
+  <p>Built with care for language learners</p>
   <p>
     <a href="https://grammario.ai">Website</a> •
     <a href="https://github.com/mserdukoff/grammario/issues">Report Bug</a> •

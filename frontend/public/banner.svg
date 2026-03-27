@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <style>
+    @font-face {
+      font-family: 'Instrument Serif';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/instrumentserif/v4/jizBRFtNs2ka5fCjHQ3FuZS8942w9OrTS3I.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Plus Jakarta Sans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/plusjakartasans/v8/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_KU7NShXDFGqn.woff2) format('woff2');
+    }
+  </style>
+
+  <rect width="1200" height="630" fill="#FAF9F7"/>
+
+  <text
+    x="1160"
+    y="270"
+    text-anchor="end"
+    font-family="'Instrument Serif', Georgia, serif"
+    font-size="64"
+    font-style="italic"
+    font-weight="400"
+    fill="#1C1917"
+    letter-spacing="-0.5"
+  >See how language</text>
+
+  <text
+    x="1160"
+    y="345"
+    text-anchor="end"
+    font-family="'Instrument Serif', Georgia, serif"
+    font-size="64"
+    font-style="italic"
+    font-weight="400"
+    fill="#1C1917"
+    letter-spacing="-0.5"
+  >actually works.</text>
+
+  <line x1="1160" y1="380" x2="880" y2="380" stroke="#E7E5E4" stroke-width="1.5"/>
+
+  <text
+    x="1160"
+    y="420"
+    text-anchor="end"
+    font-family="'Plus Jakarta Sans', system-ui, sans-serif"
+    font-size="28"
+    font-weight="500"
+    fill="#78716C"
+    letter-spacing="0.5"
+  >grammario.ai</text>
+</svg>
